@@ -1,0 +1,27 @@
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  var socket = io(); // localhost port 3000
+  var LEDGrid = []; // LED display info
+
+  // update the client-side display
+  socket.on('updateClient', function(data) {
+    LEDGrid = data.grid;
+
+    // add: update the display
+
+    // log the event
+    console.log('\nclient updated:');
+    console.log(LEDGrid);
+  });
+
+  // send update to the server (display unchanged)
+  function updateServer() {
+    gridInput = ['hello', 'server']; // test input
+    socket.emit('updateServer', { grid: gridInput });
+  }
+
+</script>
+
+hello hello
+
+<button onclick="updateServer()"></button>
