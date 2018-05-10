@@ -8,21 +8,19 @@ html, body, .container {
 h1, h2, h3, h4, h5, h6 {
   font-weight: normal;
   font-family: "Montserrat";
-}
-
-.container {
-  
+  margin: 10px 0;
 }
 
 .information {
-  height: 35%;
+  height: 27.5vh;
   width: 100%;
-  padding: 10px;
+  padding: 10px 20px;
   box-sizing: border-box;
 }
 
-.information h1 {
+.title {
   text-align: center;
+  margin: 0;
 }
 
 .players {
@@ -39,13 +37,54 @@ h1, h2, h3, h4, h5, h6 {
   padding: 10px 0;
   border-radius: 10px;
 }
+
 .player h2.current {
   background: #FFEB3B;
 }
 
-.grid {
-  height: 65%;
+.game-container {
+  height: 72.5vh;
   width: 100%;
+}
+
+.grid-container {
+  height: 72.5vh;
+  width: calc(72.5vh + 80px);
+  padding: 10px 50px 0;
+  box-sizing: border-box;
+  float: left;
+}
+
+.grid-cell {
+  width: 9%;
+  padding-bottom: 9%;
+  margin: 0.5%;
+  box-sizing: border-box;
+  position: relative;
+  display: inline-block;
   background: red;
+}
+
+.cell-colour {
+  height: 100%;
+  width: 100%;
+  position: absolute;
+}
+
+.cell-content {
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-container {
+  height: 100%;
+  width: calc(100% - 72.5vh - 80px);
+  padding: 10px;
+  box-sizing: border-box;
+  float: right;
 }
 
