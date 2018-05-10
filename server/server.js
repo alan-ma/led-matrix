@@ -12,8 +12,12 @@ var PythonShell = require('python-shell');
 // serve static public files
 app.use(express.static('public'));
 
-// LED Grid
-var LEDGrid = ['empty', 'empty'];
+// LED Grid initialization
+var LEDGrid = [];
+var LED_COUNT = 10;
+for (i=0; i<LED_COUNT; i++) {
+  LEDGrid.push([0, 0, 0]);
+}
 
 // establish socket io connection
 io.on('connection', function(socket) {
@@ -43,7 +47,7 @@ function updateGrid(gridInput) {
   };
 
   // run a python shell to execute the script via a child process
-  PythonShell.run('../test.py', options, function (err, data) {
+  PythonShell.run('../setColours.py', options, function (err, data) {
     return !err;
   });
 }

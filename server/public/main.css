@@ -1,0 +1,51 @@
+
+html, body, .container {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: normal;
+  font-family: "Montserrat";
+}
+
+.container {
+  
+}
+
+.information {
+  height: 35%;
+  width: 100%;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.information h1 {
+  text-align: center;
+}
+
+.players {
+  display: flex;
+  align-content: space-between;
+}
+
+.player {
+  width: 100%;
+  text-align: center;
+}
+
+.player h2 {
+  padding: 10px 0;
+  border-radius: 10px;
+}
+.player h2.current {
+  background: #FFEB3B;
+}
+
+.grid {
+  height: 65%;
+  width: 100%;
+  background: red;
+}
+

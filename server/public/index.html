@@ -1,27 +1,36 @@
+<!-- Data Game Client -->
+<!-- Simulates an LED Grid and acts as controller for the physical board game -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width"/>
+<meta name="description" content="Data Game - Interactive LED Grid">
+<meta name="author" content="Alan Ma">
+
+<link rel="stylesheet" href="main.css">
+<link href="https://fonts.googleapis.com/css?family=Luckiest+Guy|Montserrat|Open+Sans" rel="stylesheet">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.12/css/all.css">
+
+<title>Data Game - LED Grid</title>
+
+<div id="app" class="container">
+  <div class="information">
+    <h1>Data Game</h1>
+    <div class="players">
+      <div class="player" v-for="player in players">
+        <h2 v-bind:class="{ current: currentTurn === player.id }">{{ player.name }}</h2>
+        <h3>Points: {{ player.points }}</h3>
+        <i class="fas fa-2x" v-bind:class="player.icon"></i>
+      </div>
+    </div>
+  </div>
+  <div class="grid-container">
+    <div class="grid-cell" v-for="cell in grid" :key="cell.id">
+      {{ cell.id }}
+    </div>
+  </div>
+</div>
+
+<!-- scripts -->
 <script src="/socket.io/socket.io.js"></script>
-<script>
-  var socket = io(); // localhost port 3000
-  var LEDGrid = []; // LED display info
-
-  // update the client-side display
-  socket.on('updateClient', function(data) {
-    LEDGrid = data.grid;
-
-    // add: update the display
-
-    // log the event
-    console.log('\nclient updated:');
-    console.log(LEDGrid);
-  });
-
-  // send update to the server (display unchanged)
-  function updateServer() {
-    gridInput = ['hello', 'server']; // test input
-    socket.emit('updateServer', { grid: gridInput });
-  }
-
-</script>
-
-hello hello
-
-<button onclick="updateServer()"></button>
+<!-- production version of vue, optimized for size and speed -->
+<script src="vue.js"></script>
+<script src="script.js"></script>
