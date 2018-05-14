@@ -25,8 +25,8 @@
   </div>
   <div class="game-container">
     <div class="grid-container">
-      <div class="grid-cell" v-for="cell in grid" :key="cell.id">
-        <div class="cell-colour"></div>
+      <div class="grid-cell" v-for="cell in grid" :key="cell.id" v-on:mouseover="hover(cell.id, $event)">
+        <div class="cell-colour" v-bind:style="{ background: LEDGrid[cell.id].red }"></div>
         <div class="cell-content">{{ cell.id }}</div>
       </div>
     </div>

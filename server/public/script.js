@@ -5,11 +5,11 @@ led grid
 
 // LED Grid initialization
 var LEDGrid = [];
-var LED_COUNT = 100;
+var LED_COUNT = 10;
 for (i=0; i<LED_COUNT; i++) {
   LEDGrid.push({
     'id': i,
-    'red': 0,
+    'red': 'yellow',
     'green': 0,
     'blue': 0
   });
@@ -87,6 +87,12 @@ var app = new Vue({
     ],
     currentTurn: 3,
     grid: LEDGrid
+  },
+  methods: {
+    hover: function (id, event) {
+      console.log('HOVERED');
+      LEDGrid[id].red = 'blue';
+    }
   }
 });
 
