@@ -18,7 +18,7 @@ SYS_INPUT = str(sys.argv[1]).split('\n') # each LED is newline separated
 SET_LED_COLOURS = [] # initialize the list
 
 for i in range(len(SYS_INPUT)):
-  new_item = SYS_INPUT.split(',') # each LED specification is comma separated
+  new_item = SYS_INPUT[i].split(',') # each LED specification is comma separated
   SET_LED_COLOURS.append([]) # add an empty list
   for j in range(len(new_item)):
     try:

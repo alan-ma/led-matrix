@@ -110,6 +110,17 @@ function test(req, res) {
 }
 */
 
+// shutdown process, clear LEDs
+process.on('exit', function() {
+  // run a python shell to execute the script via a child process
+  PythonShell.run('../clear.py', options, function (err) {
+    if (err) {
+      console.log(err);
+    }
+    return !err;
+  });
+});
+
 server.listen(3000, function () {
   console.log('server running on port 3000');
 });
