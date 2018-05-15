@@ -113,7 +113,7 @@ function test(req, res) {
 var shutdown = function() {
   console.log('completing shutdown process...');
   // run a python shell to execute the script via a child process
-  PythonShell.run('../clear.py', options, function (err) {
+  PythonShell.run('../clear.py', function (err) {
     if (err) {
       console.log(err);
     }
