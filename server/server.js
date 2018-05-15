@@ -110,8 +110,8 @@ function test(req, res) {
 }
 */
 
-// shutdown process, clear LEDs
-process.on('exit', function() {
+var shutdown = function() {
+  console.log('completing shutdown process...');
   // run a python shell to execute the script via a child process
   PythonShell.run('../clear.py', options, function (err) {
     if (err) {
@@ -119,7 +119,17 @@ process.on('exit', function() {
     }
     return !err;
   });
-});
+  console.log('shutting down');
+};
+
+// shutdown process, clear LEDs
+process.on('exit', shutdown);
+
+// listen for TERM signal .e.g. kill 
+process.on ('SIGTERM', shutdown);
+
+// listen for INT signal e.g. Ctrl-C
+process.on ('SIGINT', shutdown);   
 
 server.listen(3000, function () {
   console.log('server running on port 3000');
