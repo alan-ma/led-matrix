@@ -111,15 +111,17 @@ function test(req, res) {
 */
 
 var shutdown = function() {
-  console.log('completing shutdown process...');
+  console.log('\ncompleting shutdown process...');
   // run a python shell to execute the script via a child process
   PythonShell.run('../clear.py', function (err) {
     if (err) {
       console.log(err);
     }
+
+    console.log('shutting down');
+    process.exit();
     return !err;
   });
-  console.log('shutting down');
 };
 
 // shutdown process, clear LEDs
