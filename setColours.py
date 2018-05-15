@@ -13,7 +13,18 @@ LED_FREQ_HZ = 800000  # LED signal frequency in hertz (usually 800khz)
 LED_DMA     = 5       # DMA channel to use for generating signal (try 5)
 LED_INVERT  = False   # True to invert the signal (when using NPN transistor level shift)
 
-SET_LED_COLOURS = str(sys.argv[1])
+# Parse the input
+SYS_INPUT = str(sys.argv[1]).split('\n') # each LED is newline separated
+SET_LED_COLOURS = [] # initialize the list
+
+for i in range(len(SYS_INPUT)):
+  new_item = SYS_INPUT.split(',') # each LED specification is comma separated
+  SET_LED_COLOURS.append([]) # add an empty list
+  for j in range(len(new_item)):
+    try:
+      SET_LED_COLOURS[i].append(int(new_item[j])) # try adding the number
+    except ValueError:
+      SET_LED_COLOURS[i].append(0) # add 0 if NaN
 
 
 # Define functions which animate LEDs in various ways.

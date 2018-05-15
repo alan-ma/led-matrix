@@ -59,10 +59,17 @@ io.on('connection', function(socket) {
 
 // update the physical LED grid
 function updateGrid(gridInput) {
-  var parsedInput = [];
+  var parsedInput = '';
 
-  for (var i=0; i<gridInput.length; i++) {
-    parsedInput.push([gridInput[i].red, gridInput[i].green, gridInput[i].blue]);
+  for (var i = 0; i < gridInput.length; i++) {
+    parsedInput += gridInput[i].red;
+    parsedInput += ',';
+    parsedInput += gridInput[i].green;
+    parsedInput += ',';
+    parsedInput += gridInput[i].blue;
+    if (i + 1 < gridInput.length) {
+      parsedInput += '\n';
+    }
   }
 
   var options = {
@@ -70,7 +77,10 @@ function updateGrid(gridInput) {
   };
 
   // run a python shell to execute the script via a child process
-  PythonShell.run('../setColours.py', options, function (err, data) {
+  PythonShell.run('../setColours.py', options, function (err) {
+    if (err) {
+      console.log(err);
+    }
     return !err;
   });
 }
