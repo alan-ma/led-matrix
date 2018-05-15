@@ -118,14 +118,20 @@ var shutdown = function() {
       console.log(err);
     }
 
-    console.log('shutting down');
-    process.exit();
+    server.close(function() {
+      console.log("Closed out remaining connections.");
+      process.exit();
+    });
+    
+     // if after 
+     setTimeout(function() {
+         console.error("Could not close connections in time, forcefully shutting down");
+         process.exit();
+    }, 10*1000);
+
     return !err;
   });
 };
-
-// shutdown process, clear LEDs
-process.on('exit', shutdown);
 
 // listen for TERM signal .e.g. kill 
 process.on ('SIGTERM', shutdown);
