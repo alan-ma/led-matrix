@@ -16,8 +16,23 @@ app.use(express.static('public'));
 var LEDGrid = [];
 var LED_COUNT = 10;
 for (i=0; i<LED_COUNT; i++) {
-  LEDGrid.push([0, 0, 0]);
+  LEDGrid.push({
+    'id': i,
+    'red': 0,
+    'green': 0,
+    'blue': 0
+  });
 }
+
+// define game information
+var gameInformation = {
+  'turn': 0,
+  'players': [
+    {
+      'id': 0
+    }
+  ]
+};
 
 // establish socket io connection
 io.on('connection', function(socket) {
@@ -25,25 +40,33 @@ io.on('connection', function(socket) {
   socket.emit('updateClient', { grid: LEDGrid });
 
   // receive client input
-  socket.on('updateServer', function(data) {
-    LEDGrid = data.grid;
+  socket.on('updateLED', function(data) {
+    LEDGrid[data.id].red = data.red;
+    LEDGrid[data.id].green = data.green;
+    LEDGrid[data.id].blue = data.blue;
+
     // update the client
     socket.emit('updateClient', { grid: LEDGrid });
 
     // update the physical LED grid
-    updateGrid();
+    updateGrid(LEDGrid);
 
     // log the event
-    console.log('\nserver updated');
-    console.log(LEDGrid);
+    console.log('server updated');
   });
 });
 
 
 // update the physical LED grid
 function updateGrid(gridInput) {
+  var parsedInput = [];
+
+  for (var i=0; i<gridInput.length; i++) {
+    parsedInput.push([gridInput[i].red, gridInput[i].green, gridInput[i].blue]);
+  }
+
   var options = {
-    args: gridInput
+    args: parsedInput
   };
 
   // run a python shell to execute the script via a child process

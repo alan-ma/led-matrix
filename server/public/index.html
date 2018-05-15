@@ -16,7 +16,9 @@
     <h1 class="title">Data Game</h1>
     <div class="players">
       <div class="player" v-for="player in players">
-        <h2 v-bind:class="{ current: currentTurn === player.id }">{{ player.name }}</h2>
+        <h2 v-bind:class="{ current: currentTurn === player.id }">
+          {{ player.name }}
+        </h2>
         <h3>Score: {{ player.score }}</h3>
         <h3>Points: {{ player.points }}</h3>
         <i class="fas fa-2x" v-bind:class="player.icon"></i>
@@ -25,8 +27,9 @@
   </div>
   <div class="game-container">
     <div class="grid-container">
-      <div class="grid-cell" v-for="cell in grid" :key="cell.id" v-on:mouseover="hover(cell.id, $event)">
-        <div class="cell-colour" v-bind:style="{ background: LEDGrid[cell.id].red }"></div>
+      <div class="grid-cell" v-for="cell in grid" :key="cell.id"
+          v-on:mouseover="hover(cell.id, $event)">
+        <div class="cell-colour" v-bind:style="{ background: getBackground(cell.id) }"></div>
         <div class="cell-content">{{ cell.id }}</div>
       </div>
     </div>

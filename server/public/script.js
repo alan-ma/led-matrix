@@ -9,7 +9,7 @@ var LED_COUNT = 10;
 for (i=0; i<LED_COUNT; i++) {
   LEDGrid.push({
     'id': i,
-    'red': 'yellow',
+    'red': 0,
     'green': 0,
     'blue': 0
   });
@@ -25,18 +25,21 @@ var socket = io(); // localhost port 3000
 
 // update the client-side display
 socket.on('updateClient', function(data) {
-  // LEDGrid = data.grid;
-
-  // add: update the display
+  app.grid = data.grid;
 
   // log the event
-  console.log('\nclient updated:');
-  console.log(LEDGrid);
+  console.log('client updated');
+  console.log(app.grid);
 });
 
 // send update to the server (display unchanged)
-function updateServer() {
-  socket.emit('updateServer', { grid: LEDGrid });
+function updateLED(LEDid, redColour, greenColour, blueColour) {
+  socket.emit('updateLED', {
+    id: LEDid,
+    red: redColour,
+    green: greenColour,
+    blue: blueColour
+  });
 }
 
 
@@ -89,9 +92,14 @@ var app = new Vue({
     grid: LEDGrid
   },
   methods: {
+    getBackground: function (id) {
+      if (app.grid[id].red === 0 && app.grid[id].blue === 0 && app.grid[id].green === 0) {
+        return 'rgb(224, 224, 224)';
+      }
+      return 'rgb(' + app.grid[id].red + ', ' + app.grid[id].green + ', ' + app.grid[id].blue + ')';
+    },
     hover: function (id, event) {
-      console.log('HOVERED');
-      LEDGrid[id].red = 'blue';
+      updateLED(id, 0, 255, 0);
     }
   }
 });
