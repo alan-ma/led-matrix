@@ -15,7 +15,7 @@ app.use(express.static('public'));
 // LED Grid initialization
 var LEDGrid = [];
 var LED_COUNT = 10;
-for (i=0; i<LED_COUNT; i++) {
+for (i = 0; i < LED_COUNT; i++) {
   LEDGrid.push({
     'id': i,
     'red': 0,
@@ -49,7 +49,7 @@ io.on('connection', function(socket) {
     socket.emit('updateClient', { grid: LEDGrid });
 
     // update the physical LED grid
-    updateGrid(LEDGrid);
+    updateLED(data.id, data.red, data.green, data.blue);
 
     // log the event
     console.log('server updated');
@@ -85,30 +85,33 @@ function updateGrid(gridInput) {
   });
 }
 
-/*
-// route handler (endpoint) to execute python script
 
-app.get('/test', test);
+// update a single LED
+function updateLED(id, red, green, blue) {
+  var parsedInput = '';
+  parsedInput += LED_COUNT;
+  parsedInput += '\n';
+  parsedInput += id;
+  parsedInput += '\n';
+  parsedInput += red;
+  parsedInput += ',';
+  parsedInput += green;
+  parsedInput += ',';
+  parsedInput += blue;
+  parsedInput += ',';
 
-function test(req, res) {
-  // testing endpoint http://localhost:3000/test?message1=hello&message2=world
-  // options for the script
   var options = {
-    args:
-    [
-      req.query.message1, // message1
-      req.query.message2, // message2
-    ]
+    args: parsedInput
   };
 
-  // use python shell to run script via a child process
-  PythonShell.run('../test.py', options, function (err, data) {
-    if (err) res.send(err);
-    // console.log(data);
-    res.send(data.toString());
+  // run a python shell to execute the script via a child process
+  PythonShell.run('../setLED.py', options, function (err) {
+    if (err) {
+      console.log(err);
+    }
+    return !err;
   });
 }
-*/
 
 var shutdown = function() {
   console.log('\ncompleting shutdown process...');
@@ -119,13 +122,13 @@ var shutdown = function() {
     }
 
     server.close(function() {
-      console.log("Closed out remaining connections.");
+      console.log("shutting down");
       process.exit();
     });
     
      // if after 
      setTimeout(function() {
-         console.error("Could not close connections in time, forcefully shutting down");
+         console.error("something happened, forcefully shutting down");
          process.exit();
     }, 10*1000);
 

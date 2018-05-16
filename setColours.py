@@ -7,7 +7,6 @@ import sys
 from neopixel import *
 
 # LED strip configuration:
-LED_COUNT   = 10      # Number of LED pixels.
 LED_PIN     = 18      # GPIO pin connected to the pixels (must support PWM!).
 LED_FREQ_HZ = 800000  # LED signal frequency in hertz (usually 800khz)
 LED_DMA     = 5       # DMA channel to use for generating signal (try 5)
@@ -17,7 +16,9 @@ LED_INVERT  = False   # True to invert the signal (when using NPN transistor lev
 SYS_INPUT = str(sys.argv[1]).split('\n') # each LED is newline separated
 SET_LED_COLOURS = [] # initialize the list
 
-for i in range(len(SYS_INPUT)):
+LED_COUNT = len(SYS_INPUT) # Number of LED pixels.
+
+for i in range(LED_COUNT):
   new_item = SYS_INPUT[i].split(',') # each LED specification is comma separated
   SET_LED_COLOURS.append([]) # add an empty list
   for j in range(len(new_item)):
@@ -29,7 +30,7 @@ for i in range(len(SYS_INPUT)):
 
 # Define functions which animate LEDs in various ways.
 def setColours(strip, set_colours):
-  """Change strip to varying colours"""
+  # Change strip to varying colours
   for i in range(strip.numPixels()):
     strip.setPixelColor(i, Color(
       set_colours[i][0], set_colours[i][1], set_colours[i][2])
