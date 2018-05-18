@@ -19,7 +19,7 @@ LED_INVERT  = False   # True to invert the signal (when using NPN transistor lev
 def clearGrid(strip):
   # Change strip to varying colours
   for i in range(strip.numPixels()):
-    strip.setPixelColor(i, Color(0, 0, 0)
+    strip.setPixelColor(i, Color(0, 0, 0))
   
   strip.show()
 
