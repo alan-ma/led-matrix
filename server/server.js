@@ -151,7 +151,7 @@ var updateShape = function(playerID, LEDID, LEDColour) {
 var updateGrid = function(LEDGridInput) {
   var parsedInput = '';
 
-  for (var i = 0; i < gridInput.length; i++) {
+  for (var i = 0; i < LEDGridInput.length; i++) {
     parsedInput += LEDGridInput[i].red;
     parsedInput += ',';
     parsedInput += LEDGridInput[i].green;
