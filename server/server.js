@@ -176,35 +176,13 @@ var updateGrid = function(LEDGridInput) {
 };
 
 
-// update a single LED
+// update LED Grid
 var updateLED = function(LEDID, LEDColour) {
   LEDGrid[LEDID].red = LEDColour.red;
   LEDGrid[LEDID].green = LEDColour.green;
   LEDGrid[LEDID].blue = LEDColour.blue;
 
-  var parsedInput = '';
-  parsedInput += LED_COUNT;
-  parsedInput += '\n';
-  parsedInput += LEDID;
-  parsedInput += '\n';
-  parsedInput += LEDColour.red;
-  parsedInput += ',';
-  parsedInput += LEDColour.green;
-  parsedInput += ',';
-  parsedInput += LEDColour.blue;
-  parsedInput += ',';
-
-  var options = {
-    args: parsedInput
-  };
-
-  // run a python shell to execute the script via a child process
-  PythonShell.run('../setLED.py', options, function (err) {
-    if (err) {
-      console.log(err);
-    }
-    return !err;
-  });
+  updateGrid(LEDGrid);
 };
 
 
