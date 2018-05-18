@@ -28,9 +28,11 @@
   <div class="game-container">
     <div class="grid-container">
       <div class="grid-cell" v-for="cell in grid" :key="cell.id"
-          v-on:mouseover="hover(cell.id, $event)">
+          v-on:click.stop="selectTile(cell.id)">
         <div class="cell-colour" v-bind:style="{ background: getBackground(cell.id) }"></div>
-        <div class="cell-content">{{ cell.id }}</div>
+        <div class="cell-content" v-if="shapes[cell.id].id > -1">
+            <i class="fas fa-2x" v-bind:class="ICONS[ shapes[cell.id].id ]"></i>
+        </div>
       </div>
     </div>
     <div class="action-container">

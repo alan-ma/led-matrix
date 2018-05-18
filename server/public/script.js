@@ -1,19 +1,33 @@
 
 /*
-led grid
+client initialization
 */
 
 // LED Grid initialization
-var LEDGrid = [];
+var LEDGridInit = [];
 var LED_COUNT = 10;
-for (i=0; i<LED_COUNT; i++) {
-  LEDGrid.push({
-    'id': i,
-    'red': 0,
-    'green': 0,
-    'blue': 0
+for (var i = 0; i < LED_COUNT; i++) {
+  LEDGridInit.push({
+    id: i,
+    red: 0,
+    green: 0,
+    blue: 0
   });
 }
+
+// shapes grid initialization
+var shapesGridInit = [];
+for (var i = 0; i < LED_COUNT; i++) {
+  shapesGridInit.push({
+    id: -1,
+    red: 0,
+    green: 0,
+    blue: 0
+  });
+}
+
+// player icons/shapes using font awesome
+const ICONS = ['fa-star', 'fa-square', 'fa-circle', 'fa-heart', 'fa-play'];
 
 
 /*
@@ -23,73 +37,66 @@ socket io
 
 var socket = io(); // localhost port 3000
 
-// update the client-side display
+// update the client information
 socket.on('updateClient', function(data) {
   app.grid = data.grid;
-
-  // log the event
-  console.log('client updated');
-  console.log(app.grid);
+  app.shapes = data.shapes;
+  parseGameInfo(data.info);
 });
 
-// send update to the server (display unchanged)
-function updateLED(LEDid, redColour, greenColour, blueColour) {
-  socket.emit('updateLED', {
-    id: LEDid,
-    red: redColour,
-    green: greenColour,
-    blue: blueColour
-  });
-}
+// parse the game information
+var parseGameInfo = function(gameInformation) {
+  app.players = gameInformation.players;
 
+  for (var i = 0; i < app.players.length; i++) {
+    app.players[i].icon = ICONS[i];
+  }
+
+  app.currentTurn = gameInformation.currentTurn;
+};
+
+var placeShape = function(playerID, LEDID) {
+  socket.emit('placeShape', {
+    playerID: playerID,
+    LEDID: LEDID,
+    LEDColour: app.players[playerID].selectedColour
+  });
+};
+
+var incrementTurn = function(playerID) {
+  socket.emit('incrementTurn', {
+    playerID: playerID
+  });
+};
 
 /*
-client side
 vue js
 */
 
 var app = new Vue({
   el: '#app',
   data: {
+    ICONS: ICONS,
     players: [
       {
-        'id': 1,
-        'name': 'Player1',
-        'points': 0,
-        'score': 0,
-        'icon': 'fa-star'
-      },
-      {
-        'id': 2,
-        'name': 'Player2',
-        'points': 0,
-        'score': 0,
-        'icon': 'fa-square'
-      },
-      {
-        'id': 3,
-        'name': 'Player3',
-        'points': 0,
-        'score': 0,
-        'icon': 'fa-circle'
-      },
-      {
-        'id': 4,
-        'name': 'Player4',
-        'points': 0,
-        'score': 0,
-        'icon': 'fa-heart'
-      },
-      {
-        'id': 5,
-        'name': 'Player5',
-        'points': 0,
-        'score': 0,
-        'icon': 'fa-play'
+        id: 0,
+        name: 'PlayerOne',
+        playedShape: false,
+        selectedColour: {
+          red: 0,
+          green: 0,
+          blue: 0
+        },
+        usedSpecial: false,
+        rolledNumbers: false,
+        availableNumbers: [-1, -1],
+        points: 0,
+        score: 0
       }
     ],
-    currentTurn: 3,
-    grid: LEDGrid
+    currentTurn: 0,
+    grid: LEDGridInit,
+    shapes: shapesGridInit
   },
   methods: {
     getBackground: function (id) {
@@ -98,8 +105,9 @@ var app = new Vue({
       }
       return 'rgb(' + app.grid[id].red + ', ' + app.grid[id].green + ', ' + app.grid[id].blue + ')';
     },
-    hover: function (id, event) {
-      updateLED(id, 0, 255, 0);
+    selectTile: function (LEDID) {
+      placeShape(app.currentTurn, LEDID);
+      incrementTurn(app.currentTurn);
     }
   }
 });
