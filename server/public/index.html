@@ -36,7 +36,15 @@
       </div>
     </div>
     <div class="action-container">
-
+      <h2>It's <mark v-bind:class="{ current: currentTurn === players[currentTurn].id }">{{ players[currentTurn].name }}'s</mark> turn.</h2>
+      <div class="playShape">
+        <h3>Play a Shape</h3>
+        <i class="fas" v-bind:class="players[currentTurn].icon"></i>
+      </div>
+      <div class="specialMove">
+        <h3>Special Move</h3>
+        <h3>Points: {{ players[currentTurn].points }}</h3>
+      </div>
     </div>
   </div>
   

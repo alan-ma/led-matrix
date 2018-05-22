@@ -38,7 +38,7 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 10px;
 }
 
-.player h2.current {
+.current {
   background: #FFEB3B;
 }
 
@@ -85,5 +85,10 @@ h1, h2, h3, h4, h5, h6 {
   padding: 10px;
   box-sizing: border-box;
   float: right;
+}
+
+.action-container mark {
+  padding: 10px;
+  border-radius: 10px;
 }
 

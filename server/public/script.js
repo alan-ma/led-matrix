@@ -5,13 +5,11 @@ client initialization
 
 // LED Grid initialization
 var LEDGridInit = [];
-var LED_COUNT = 10;
+var LED_COUNT = 100;
 for (var i = 0; i < LED_COUNT; i++) {
   LEDGridInit.push({
     id: i,
-    red: 0,
-    green: 0,
-    blue: 0
+    colour: 0
   });
 }
 
@@ -20,15 +18,15 @@ var shapesGridInit = [];
 for (var i = 0; i < LED_COUNT; i++) {
   shapesGridInit.push({
     id: -1,
-    red: 0,
-    green: 0,
-    blue: 0
+    colour: 0
   });
 }
 
 // player icons/shapes using font awesome
 const ICONS = ['fa-star', 'fa-square', 'fa-circle', 'fa-heart', 'fa-play'];
 
+// set colours
+const COLOURS = [[0, 0, 0], [255, 0, 0], [0, 255, 0], [0, 0, 255], [255, 255, 0], [0, 255, 255], [255, 0, 255]];
 
 /*
 communication with server
@@ -53,6 +51,8 @@ var parseGameInfo = function(gameInformation) {
   }
 
   app.currentTurn = gameInformation.currentTurn;
+  app.ICONS = gameInformation.ICONS;
+  app.COLOURS = gameInformation.COLOURS;
 };
 
 var placeShape = function(playerID, LEDID) {
@@ -77,16 +77,13 @@ var app = new Vue({
   el: '#app',
   data: {
     ICONS: ICONS,
+    COLOURS: COLOURS,
     players: [
       {
         id: 0,
         name: 'PlayerOne',
         playedShape: false,
-        selectedColour: {
-          red: 0,
-          green: 0,
-          blue: 0
-        },
+        selectedColour: 0,
         usedSpecial: false,
         rolledNumbers: false,
         availableNumbers: [-1, -1],
@@ -100,10 +97,18 @@ var app = new Vue({
   },
   methods: {
     getBackground: function (id) {
-      if (app.grid[id].red === 0 && app.grid[id].blue === 0 && app.grid[id].green === 0) {
+      if (app.grid[id].colour === 0) {
         return 'rgb(224, 224, 224)';
       }
-      return 'rgb(' + app.grid[id].red + ', ' + app.grid[id].green + ', ' + app.grid[id].blue + ')';
+      var parsedColour = 'rgb(';
+      parsedColour += app.COLOURS[app.grid[id].colour][0];
+      parsedColour += ', ';
+      parsedColour += app.COLOURS[app.grid[id].colour][1];
+      parsedColour += ', ';
+      parsedColour += app.COLOURS[app.grid[id].colour][2];
+      parsedColour += ')';
+
+      return parsedColour;
     },
     selectTile: function (LEDID) {
       placeShape(app.currentTurn, LEDID);

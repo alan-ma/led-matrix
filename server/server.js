@@ -14,13 +14,11 @@ app.use(express.static('public'));
 
 // LED Grid initialization
 var LEDGrid = [];
-var LED_COUNT = 10;
+var LED_COUNT = 100;
 for (var i = 0; i < LED_COUNT; i++) {
   LEDGrid.push({
     id: i,
-    red: 0,
-    green: 0,
-    blue: 0
+    colour: 0
   });
 }
 
@@ -29,25 +27,21 @@ var shapesGrid = [];
 for (var i = 0; i < LED_COUNT; i++) {
   shapesGrid.push({
     id: -1,
-    red: 0,
-    green: 0,
-    blue: 0
+    colour: 0
   });
 }
 
 // define game information
 var gameInformation = {
   currentTurn: 0,
+  ICONS: ['fa-star', 'fa-square', 'fa-circle', 'fa-heart', 'fa-play'],
+  COLOURS: [[0, 0, 0], [255, 0, 0], [0, 255, 0], [0, 0, 255], [255, 255, 0], [0, 255, 255], [255, 0, 255]],
   players: [
     {
       id: 0,
       name: 'PlayerOne',
       playedShape: false,
-      selectedColour: {
-        red: 255,
-        green: 0,
-        blue: 0
-      },
+      selectedColour: 1,
       usedSpecial: false,
       rolledNumbers: false,
       availableNumbers: [-1, -1],
@@ -58,11 +52,7 @@ var gameInformation = {
       id: 1,
       name: 'PlayerTwo',
       playedShape: false,
-      selectedColour: {
-        red: 0,
-        green: 255,
-        blue: 0
-      },
+      selectedColour: 2,
       usedSpecial: false,
       rolledNumbers: false,
       availableNumbers: [-1, -1],
@@ -73,11 +63,7 @@ var gameInformation = {
       id: 2,
       name: 'PlayerThree',
       playedShape: false,
-      selectedColour: {
-        red: 0,
-        green: 0,
-        blue: 255
-      },
+      selectedColour: 3,
       usedSpecial: false,
       rolledNumbers: false,
       availableNumbers: [-1, -1],
@@ -140,10 +126,16 @@ var incrementTurn = function(playerID) {
 var updateShape = function(playerID, LEDID, LEDColour) {
   if (shapesGrid[LEDID].id === -1) {
     shapesGrid[LEDID].id = playerID;
-    shapesGrid[LEDID].red = LEDColour.red;
-    shapesGrid[LEDID].green = LEDColour.green;
-    shapesGrid[LEDID].blue = LEDColour.blue;
+    shapesGrid[LEDID].colour = LEDColour;
   }
+};
+
+
+// update LED Grid
+var updateLED = function(LEDID, LEDColour) {
+  LEDGrid[LEDID].colour = LEDColour;
+
+  updateGrid(LEDGrid);
 };
 
 
@@ -152,11 +144,12 @@ var updateGrid = function(LEDGridInput) {
   var parsedInput = '';
 
   for (var i = 0; i < LEDGridInput.length; i++) {
-    parsedInput += LEDGridInput[i].red;
+    console.log(LEDGridInput[i].colour);
+    parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][0];
     parsedInput += ',';
-    parsedInput += LEDGridInput[i].green;
+    parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][1];
     parsedInput += ',';
-    parsedInput += LEDGridInput[i].blue;
+    parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][2];
     if (i + 1 < LEDGridInput.length) {
       parsedInput += '\n';
     }
@@ -173,16 +166,6 @@ var updateGrid = function(LEDGridInput) {
     }
     return !err;
   });
-};
-
-
-// update LED Grid
-var updateLED = function(LEDID, LEDColour) {
-  LEDGrid[LEDID].red = LEDColour.red;
-  LEDGrid[LEDID].green = LEDColour.green;
-  LEDGrid[LEDID].blue = LEDColour.blue;
-
-  updateGrid(LEDGrid);
 };
 
 
