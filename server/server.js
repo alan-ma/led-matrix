@@ -34,14 +34,17 @@ for (var i = 0; i < LED_COUNT; i++) {
 // define game information
 var gameInformation = {
   currentTurn: 0,
+  playingShape: false,
+  usingSpecial: false,
   ICONS: ['fa-star', 'fa-square', 'fa-circle', 'fa-heart', 'fa-play'],
-  COLOURS: [[0, 0, 0], [255, 0, 0], [0, 255, 0], [0, 0, 255], [255, 255, 0], [0, 255, 255], [255, 0, 255]],
+  COLOURS: [[0, 0, 0], [255, 0, 0], [0, 255, 0], [0, 0, 255], [255, 255, 0], [0, 255, 255]],
   players: [
     {
       id: 0,
       name: 'PlayerOne',
       playedShape: false,
-      selectedColour: 1,
+      shapesLeft: [0, 1, 10, 10, 10, 10],
+      selectedColour: 0,
       usedSpecial: false,
       rolledNumbers: false,
       availableNumbers: [-1, -1],
@@ -52,7 +55,8 @@ var gameInformation = {
       id: 1,
       name: 'PlayerTwo',
       playedShape: false,
-      selectedColour: 2,
+      shapesLeft: [0, 10, 10, 10, 10, 10],
+      selectedColour: 0,
       usedSpecial: false,
       rolledNumbers: false,
       availableNumbers: [-1, -1],
@@ -63,7 +67,8 @@ var gameInformation = {
       id: 2,
       name: 'PlayerThree',
       playedShape: false,
-      selectedColour: 3,
+      shapesLeft: [0, 10, 10, 10, 10, 10],
+      selectedColour: 0,
       usedSpecial: false,
       rolledNumbers: false,
       availableNumbers: [-1, -1],
@@ -95,6 +100,38 @@ io.on('connection', function(socket) {
     updateClient(socket);
   });
 
+  // action play shape
+  socket.on('actionPlayShape', function(data) {
+    actionPlayShape(data.playerID);
+
+    // update the client information
+    updateClient(socket);
+  });
+
+  // action use special
+  socket.on('actionUseSpecial', function(data) {
+    actionPlayShape(data.playerID);
+
+    // update the client information
+    updateClient(socket);
+  });
+
+  // select colour
+  socket.on('selectColour', function(data) {
+    selectColour(data.playerID, data.colourID);
+
+    // update the client information
+    updateClient(socket);
+  });
+
+  // finish playing shape
+  socket.on('finishPlayingShape', function(data) {
+    finishPlayingShape(data.playerID);
+
+    // update the client information
+    updateClient(socket);
+  });
+
 });
 
 // update the client information
@@ -109,32 +146,81 @@ var updateClient = function(socket) {
 // a player places a shape
 var placeShape = function(playerID, LEDID, LEDColour) {
   if (playerID === gameInformation.currentTurn) {
-    updateLED(LEDID, LEDColour);
-    updateShape(playerID, LEDID, LEDColour);
+    if (checkTile(playerID, LEDID, LEDColour)) {
+      updateLED(LEDID, LEDColour);
+      updateShape(playerID, LEDID, LEDColour);
+
+      finishPlayingShape(playerID);
+    }
   }
 };
 
 // increment the turn
 var incrementTurn = function(playerID) {
   if (playerID === gameInformation.currentTurn) {
+    gameInformation.players[playerID].selectedColour = 0;
+    gameInformation.players[playerID].playedShape = false;
+    gameInformation.players[playerID].usedSpecial = false;
     gameInformation.currentTurn = (gameInformation.currentTurn + 1) % gameInformation.players.length;
+    gameInformation.playingShape = false;
+    gameInformation.usingSpecial = false;
   }
 };
 
+// action play shape
+var actionPlayShape = function(playerID) {
+  if (playerID === gameInformation.currentTurn &&
+      !gameInformation.players[playerID].playedShape) {
+    gameInformation.playingShape = true;
+  }
+};
+
+// action use shape
+var actionUseSpecial = function(playerID) {
+  if (playerID === gameInformation.currentTurn &&
+      !gameInformation.players[playerID].usedSpecial) {
+    gameInformation.players[playerID].usedSpecial = true;
+    gameInformation.usingSpecial = true;
+  }
+};
+
+// select colour while playing a shape
+var selectColour = function(playerID, colourID) {
+  if (playerID === gameInformation.currentTurn &&
+      colourID > 0 && colourID < gameInformation.COLOURS.length) {
+    gameInformation.players[playerID].selectedColour = colourID;
+  }
+};
+
+// finish playing shape
+var finishPlayingShape = function(playerID) {
+  if (playerID === gameInformation.currentTurn) {
+    gameInformation.players[playerID].playedShape = true;
+    gameInformation.playingShape = false;
+  }
+};
+
+
+
+
+// check the tile for availability
+var checkTile = function(playerID, id, colour) {
+  return shapesGrid[id].id === -1 &&
+      colour > 0 &&
+      gameInformation.players[playerID].shapesLeft[colour] > 0 &&
+      !gameInformation.players[playerID].playedShape;
+};
 
 // update the tile with the player's shape
 var updateShape = function(playerID, LEDID, LEDColour) {
-  if (shapesGrid[LEDID].id === -1) {
-    shapesGrid[LEDID].id = playerID;
-    shapesGrid[LEDID].colour = LEDColour;
-  }
+  shapesGrid[LEDID].id = playerID;
+  shapesGrid[LEDID].colour = LEDColour;
+  gameInformation.players[playerID].shapesLeft[LEDColour] -= 1;
 };
-
 
 // update LED Grid
 var updateLED = function(LEDID, LEDColour) {
   LEDGrid[LEDID].colour = LEDColour;
-
   updateGrid(LEDGrid);
 };
 

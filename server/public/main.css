@@ -5,10 +5,30 @@ html, body, .container {
   margin: 0;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1, h2, h3 {
   font-weight: normal;
   font-family: "Montserrat";
   margin: 10px 0;
+}
+
+h4, h5, h6, p {
+  font-weight: normal;
+  font-family: "Open Sans";
+  margin: 10px 0;
+}
+
+i {
+  -webkit-text-stroke-width: 3px;
+  -webkit-text-stroke-color: #212121;
+}
+
+i.no-stroke {
+  -webkit-text-stroke-width: 0;
+}
+
+.unselectable {
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .information {
@@ -35,7 +55,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .player h2 {
   padding: 10px 0;
-  border-radius: 10px;
+  border-radius: 6px;
 }
 
 .current {
@@ -62,6 +82,14 @@ h1, h2, h3, h4, h5, h6 {
   box-sizing: border-box;
   position: relative;
   display: inline-block;
+  border-radius: 3px;
+  overflow: hidden;
+  transition: 0.1s;
+}
+
+.grid-cell.hoverable:hover {
+  cursor: pointer;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.8);
 }
 
 .cell-colour {
@@ -85,10 +113,128 @@ h1, h2, h3, h4, h5, h6 {
   padding: 10px;
   box-sizing: border-box;
   float: right;
+  position: relative;
 }
 
 .action-container mark {
   padding: 10px;
-  border-radius: 10px;
+  border-radius: 6px;
 }
+
+.menu {
+  width: 35%;
+  padding-bottom: 35%;
+  margin: 20px 10px;
+  box-sizing: border-box;
+  position: relative;
+  display: inline-block;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.menu.play-shape {
+  background: #40C4FF;
+}
+
+.menu.play-shape.available:hover {
+  transform: scale(1.03);
+  background: #80D8FF;
+}
+
+.menu.use-special {
+  background: #00C853;
+}
+
+.menu.use-special.available:hover {
+  transform: scale(1.03);
+  background: #00E676;
+}
+
+.menu.unavailable {
+  background: #E0E0E0;
+  cursor: not-allowed;
+}
+
+.menu.unavailable:hover {
+  animation: shake 0.4s;
+}
+
+@keyframes shake {
+  10%, 50%, 90% {
+    transform: translate(-2px);
+  }
+  30%, 70% {
+    transform: translate(2px);
+  }
+}
+
+.inside-content {
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.action {
+  padding-top: 10px;
+  width: 75%;
+}
+
+.action h3 {
+  margin-top: 30px;
+}
+
+.action i {
+  margin: 0 5px;
+}
+
+.colour {
+  transition: 0.3s;
+  cursor: pointer;
+}
+
+.colour:hover {
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.8);
+}
+
+.shapes {
+  height: 50px;
+}
+
+.cancel {
+  margin-top: 80px;
+  text-decoration: underline;
+  cursor: pointer;
+  background: #90A4AE;
+  width: 70%;
+  padding: 10px;
+  text-align: center;
+  transition: background 0.3s, transform 0.3s;
+  border-radius: 6px;
+  margin: 30px 0;
+  box-sizing: content-box;
+}
+
+.menu.cancel {
+  margin: 10px;
+}
+
+.action .cancel {
+  width: 80%;
+}
+
+.cancel:hover {
+  transform: scale(1.03);
+  background: #B0BEC5;
+}
+
+.cancel p {
+  font-size: 16px;
+  font-style: italic;
+}
+
 

@@ -11,39 +11,158 @@
 
 <title>Data Game - LED Grid</title>
 
+
+<!-- app container -->
 <div id="app" class="container">
+
+  <!-- information heading at the top -->
   <div class="information">
     <h1 class="title">Data Game</h1>
+
+    <!-- lists player information -->
     <div class="players">
+
+      <!-- loops through each player -->
       <div class="player" v-for="player in players">
+
+        <!-- current player is highlighted -->
         <h2 v-bind:class="{ current: currentTurn === player.id }">
           {{ player.name }}
         </h2>
         <h3>Score: {{ player.score }}</h3>
         <h3>Points: {{ player.points }}</h3>
-        <i class="fas fa-2x" v-bind:class="player.icon"></i>
+        <i class="fas fa-2x"
+            v-bind:style="{ color: getBackground( player.selectedColour ) }"
+            v-bind:class="player.icon"></i>
       </div>
     </div>
   </div>
+
+
+  <!-- game container with virtual game board -->
   <div class="game-container">
+
+    <!-- led grid -->
     <div class="grid-container">
-      <div class="grid-cell" v-for="cell in grid" :key="cell.id"
-          v-on:click.stop="selectTile(cell.id)">
-        <div class="cell-colour" v-bind:style="{ background: getBackground(cell.id) }"></div>
+
+      <!-- loop over each led cell - each cell is clickable -->
+      <div class="grid-cell"
+          v-for="cell in grid" :key="cell.id"
+          v-on:click.stop="selectTile(cell.id)"
+          v-bind:class="{ hoverable: canPlayShape(currentTurn, cell.id) }">
+
+        <!-- dynamic cell colour -->
+        <div class="cell-colour"
+            v-bind:style="{ background: getBackground(cell.colour) }"></div>
+
+        <!-- dynamic shape to represent who played it -->
         <div class="cell-content" v-if="shapes[cell.id].id > -1">
-            <i class="fas fa-2x" v-bind:class="ICONS[ shapes[cell.id].id ]"></i>
+          <i class="fas fa-2x"
+              v-bind:style="{ color: getBackground( shapes[cell.id].colour ) }"
+              v-bind:class="ICONS[ shapes[cell.id].id ]"></i>
         </div>
       </div>
     </div>
+
+
+    <!-- available actions on each turn -->
     <div class="action-container">
-      <h2>It's <mark v-bind:class="{ current: currentTurn === players[currentTurn].id }">{{ players[currentTurn].name }}'s</mark> turn.</h2>
-      <div class="playShape">
-        <h3>Play a Shape</h3>
-        <i class="fas" v-bind:class="players[currentTurn].icon"></i>
+
+      <!-- show current player -->
+      <h2>It's <mark
+          v-bind:class="{ current: currentTurn === players[currentTurn].id }">
+          {{ players[currentTurn].name }}'s</mark> turn.</h2>
+
+      <!-- menu of available actions, displays if nothing is being done -->
+
+      <!-- option to play a shape -->
+      <div class="play-shape menu"
+          v-if="!playingShape && !usingSpecial"
+          v-bind:class="{ available: !players[currentTurn].playedShape,
+          unavailable: players[currentTurn].playedShape }"
+          v-on:click.stop="actionPlayShape(currentTurn)">
+        <div class="inside-content unselectable">
+          <h3>Play a Shape</h3>
+          <h3><i class="fas" v-bind:class="players[currentTurn].icon"></i></h3>
+        </div>
       </div>
-      <div class="specialMove">
-        <h3>Special Move</h3>
-        <h3>Points: {{ players[currentTurn].points }}</h3>
+
+      <!-- option to use a special move -->
+      <div class="use-special menu"
+          v-if="!playingShape && !usingSpecial"
+          v-bind:class="{ available: !players[currentTurn].usedSpecial,
+          unavailable: players[currentTurn].usedSpecial }"
+          v-on:click.stop="actionUseSpecial(currentTurn)">
+        <div class="inside-content unselectable">
+          <h3>Special Move</h3>
+          <h3>Points: {{ players[currentTurn].points }}</h3>
+        </div>
+      </div>
+
+      <!-- currently playing a shape -->
+      <div class="action play-shape" v-if="playingShape">
+        <h3>Pick a colour:</h3>
+
+        <!-- loop through all colours except for the first (null colour) -->
+        <div class="colour grid-cell"
+            v-if="index > 0"
+            v-for="(value, index) in COLOURS"
+            v-on:click.stop="selectColour(currentTurn, index)">
+
+          <!-- dynamic cell colour -->
+          <div class="cell-colour" v-bind:style="{ background: getBackground(index) }"></div>
+
+          <!-- selection highlight -->
+          <div class="cell-content">
+            <!-- shows current selection -->
+            <h2><i class="fas fa-check-circle no-stroke"
+                v-if="index === players[currentTurn].selectedColour"></i></h2>
+            <!-- shows number of shapes left for the selected colour -->
+            <p v-if="index != players[currentTurn].selectedColour">
+              {{ players[currentTurn]
+                  .shapesLeft[ index ] }}
+            </p>
+          </div>
+        </div>
+
+        <!-- displays shape being played -->
+        <h3>Playing shape<em
+            v-if="players[currentTurn].selectedColour === 0"> (select a colour above)</em>:</h3>
+        <!-- shows the shapes left for the selected colour -->
+        <div class="shapes">
+          <i class="fas fa-2x"
+              v-for="n in players[currentTurn].shapesLeft[ players[currentTurn].selectedColour ]"
+              v-bind:style="{ color: getBackground( players[currentTurn].selectedColour ) }"
+              v-bind:class="players[currentTurn].icon"></i>
+          <!-- no shapes left -->
+          <p v-if="players[currentTurn]
+              .shapesLeft[ players[currentTurn].selectedColour ] === 0 &&
+              players[currentTurn].selectedColour != 0">
+            None left!
+          </p>
+          <!-- no colour selected -->
+          <p v-if="players[currentTurn].selectedColour === 0">
+            Select a colour.
+          </p>
+        </div>
+
+        <!-- cancel playing shape -->
+        <div class="cancel unselectable"
+            v-on:click.stop="finishPlayingShape(currentTurn)">
+          <p>Cancel (you will not be able to play a shape)</p>
+        </div>
+      </div>
+
+      <!-- currently using a special move -->
+      <div class="action use-special">
+
+      </div>
+
+      <!-- end turn -->
+      <div class="cancel menu unselectable"
+          v-if="!playingShape && !usingSpecial"
+          v-on:click.stop="incrementTurn(currentTurn)">
+        <h3>End turn</h3>
       </div>
     </div>
   </div>
