@@ -31,6 +31,10 @@ i.no-stroke {
   -webkit-user-select: none;
 }
 
+.inline {
+  display: inline;
+}
+
 .information {
   height: 27.5vh;
   width: 100%;
@@ -76,8 +80,8 @@ i.no-stroke {
 }
 
 .grid-cell {
-  width: 9%;
-  padding-bottom: 9%;
+  width: 15%;
+  padding-bottom: 15%;
   margin: 0.5%;
   box-sizing: border-box;
   position: relative;
@@ -186,6 +190,7 @@ i.no-stroke {
 
 .action h3 {
   margin-top: 30px;
+  clear: both;
 }
 
 .action i {
@@ -236,5 +241,39 @@ i.no-stroke {
   font-size: 16px;
   font-style: italic;
 }
+
+.roll-numbers {
+  padding: 8px;
+  border-radius: 6px;
+  width: 80px;
+  text-align: center;
+  transition: 0.3s;
+  float: left;
+}
+
+.roll-numbers.available {
+  cursor: pointer;
+  background: #B39DDB;
+}
+
+.roll-numbers.unavailable {
+  cursor: not-allowed;
+  background: #E0E0E0;
+}
+
+.roll-numbers.available:hover {
+  transform: scale(1.05);
+}
+
+.available-numbers {
+  font-size: 16px;
+  margin: 5px 15px 30px;
+  float: left;
+}
+
+.available-numbers p {
+  margin: 5px;
+}
+
 
 

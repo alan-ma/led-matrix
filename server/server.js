@@ -13,8 +13,10 @@ var PythonShell = require('python-shell');
 app.use(express.static('public'));
 
 // LED Grid initialization
+const SIZE = 6;
+const RANDSIZE = 10;
 var LEDGrid = [];
-var LED_COUNT = 100;
+var LED_COUNT = SIZE * SIZE;
 for (var i = 0; i < LED_COUNT; i++) {
   LEDGrid.push({
     id: i,
@@ -31,6 +33,7 @@ for (var i = 0; i < LED_COUNT; i++) {
   });
 }
 
+
 // define game information
 var gameInformation = {
   currentTurn: 0,
@@ -46,7 +49,7 @@ var gameInformation = {
       shapesLeft: [0, 1, 10, 10, 10, 10],
       selectedColour: 0,
       usedSpecial: false,
-      rolledNumbers: false,
+      rolledNumbers: -1,
       availableNumbers: [-1, -1],
       points: 0,
       score: 0
@@ -58,7 +61,7 @@ var gameInformation = {
       shapesLeft: [0, 10, 10, 10, 10, 10],
       selectedColour: 0,
       usedSpecial: false,
-      rolledNumbers: false,
+      rolledNumbers: -1,
       availableNumbers: [-1, -1],
       points: 0,
       score: 0
@@ -70,7 +73,7 @@ var gameInformation = {
       shapesLeft: [0, 10, 10, 10, 10, 10],
       selectedColour: 0,
       usedSpecial: false,
-      rolledNumbers: false,
+      rolledNumbers: -1,
       availableNumbers: [-1, -1],
       points: 0,
       score: 0
@@ -132,6 +135,17 @@ io.on('connection', function(socket) {
     updateClient(socket);
   });
 
+  // roll numbers
+  socket.on('rollNumbers', function(data) {
+    rollNumbers(data.playerID);
+
+    // highlight available cells
+    highlightAvailableCells(data.playerID, socket);
+
+    // update the client information
+    updateClient(socket);
+  });
+
 });
 
 // update the client information
@@ -158,9 +172,11 @@ var placeShape = function(playerID, LEDID, LEDColour) {
 // increment the turn
 var incrementTurn = function(playerID) {
   if (playerID === gameInformation.currentTurn) {
+    // reset the temporary variables for the player
     gameInformation.players[playerID].selectedColour = 0;
     gameInformation.players[playerID].playedShape = false;
     gameInformation.players[playerID].usedSpecial = false;
+    gameInformation.players[playerID].rolledNumbers = -1;
     gameInformation.currentTurn = (gameInformation.currentTurn + 1) % gameInformation.players.length;
     gameInformation.playingShape = false;
     gameInformation.usingSpecial = false;
@@ -195,10 +211,32 @@ var selectColour = function(playerID, colourID) {
 // finish playing shape
 var finishPlayingShape = function(playerID) {
   if (playerID === gameInformation.currentTurn) {
+    gameInformation.players[playerID].availableNumbers = [-1, -1];
     gameInformation.players[playerID].playedShape = true;
     gameInformation.playingShape = false;
   }
 };
+
+// roll numbers
+var rollNumbers = function(playerID) {
+  if (playerID === gameInformation.currentTurn &&
+      gameInformation.players[playerID].rolledNumbers === -1) {
+    // generate available numbers
+    gameInformation.players[playerID].availableNumbers[0] = getRandomInt(RANDSIZE);
+    gameInformation.players[playerID].availableNumbers[1] = getRandomInt(RANDSIZE);
+    gameInformation.players[playerID].rolledNumbers = 0; // 0 is rolling
+  }
+};
+
+// generate random integer from 0 to max - 1
+var getRandomInt = function(max) {
+  return Math.floor(Math.random() * Math.floor(max));
+};
+
+// generate a floating point between min and less than max
+function getRandomArbitrary(min, max) {
+  return Math.random() * (max - min) + min;
+}
 
 
 
@@ -208,7 +246,11 @@ var checkTile = function(playerID, id, colour) {
   return shapesGrid[id].id === -1 &&
       colour > 0 &&
       gameInformation.players[playerID].shapesLeft[colour] > 0 &&
-      !gameInformation.players[playerID].playedShape;
+      !gameInformation.players[playerID].playedShape &&
+      gameInformation.players[playerID].rolledNumbers === 2 &&
+      isHighlighted(id,
+          gameInformation.players[playerID].availableNumbers[0],
+          gameInformation.players[playerID].availableNumbers[1]);
 };
 
 // update the tile with the player's shape
@@ -224,20 +266,96 @@ var updateLED = function(LEDID, LEDColour) {
   updateGrid(LEDGrid);
 };
 
+// check if tile is in a row or col
+var isHighlighted = function(id, row, col) {
+  // check if LED is in the highlighted column
+  if (id % RANDSIZE === col) {
+    return true;
+  } else {
+    // check if LED is in the highlighted row
+    if (Math.floor( id / RANDSIZE ) === row) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
+// highlight iteration function
+var highlightIteration = function(playerID, socket, rowOrCol, iteration, total) {
+  gameInformation.players[playerID].availableNumbers[rowOrCol] = iteration % RANDSIZE;
+
+  // check if this is the last iteration
+  if (iteration === total) {
+    // increment rolled numbers
+    gameInformation.players[playerID].rolledNumbers += 1;
+  }
+
+  // update the client
+  updateClient(socket);
+};
+
+// highlight available cells and simulate rng
+var highlightAvailableCells = function(playerID, socket) {
+  const INTERVAL = 12; // delay for each iteration
+  const ROWEXP = getRandomArbitrary(1.5, 1.8);
+  const COLEXP = getRandomArbitrary(1.5, 1.8);
+  
+  // number of times that the grid loops through highlights
+  var numRows = 20 + gameInformation.players[playerID].availableNumbers[0];
+  var numCols = 20 + gameInformation.players[playerID].availableNumbers[1];
+
+  // highlight the rows in sequence
+  for (var row = 0; row <= numRows; row++) {
+    // loop through number of row iterations
+    // each timeout is set to be a little slower based on
+    // the interval constant and the rowexp
+    setTimeout(highlightIteration,
+        INTERVAL * Math.pow(row, ROWEXP), playerID, socket, 0, row, numRows);
+  }
+
+  // highlight the columns in sequence
+  for (var col = 0; col <= numCols; col++) {
+    // same logic except for the columns
+    setTimeout(highlightIteration,
+        INTERVAL * Math.pow(col, COLEXP), playerID, socket, 1, col, numCols);
+  }
+};
 
 // update the physical LED grid
-var updateGrid = function(LEDGridInput) {
+var updateGrid = function(LEDGridInput, row, col) {
   var parsedInput = '';
 
   for (var i = 0; i < LEDGridInput.length; i++) {
-    console.log(LEDGridInput[i].colour);
-    parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][0];
-    parsedInput += ',';
-    parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][1];
-    parsedInput += ',';
-    parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][2];
-    if (i + 1 < LEDGridInput.length) {
-      parsedInput += '\n';
+    // no highlight parameters were specified
+    if (row === undefined && col === undefined) {
+      // add the colour to the parsed input
+      parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][0];
+      parsedInput += ',';
+      parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][1];
+      parsedInput += ',';
+      parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][2];
+      if (i + 1 < LEDGridInput.length) {
+        parsedInput += '\n';
+      }
+    } else { // adding highlights for availble row/columns
+      // colour is specified
+      if (LEDGridInput[i].colour > 0) {
+        // add the colour to the parsed input
+        parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][0];
+        parsedInput += ',';
+        parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][1];
+        parsedInput += ',';
+        parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][2];
+        if (i + 1 < LEDGridInput.length) {
+          parsedInput += '\n';
+        }
+      } else { // colour is unspecified, check if it is available
+        // check if LED is in the highlighted column
+        if (isHighlighted(playerID, row, col)) {
+          parsedInput += '255,255,255\n'; // highlight as white
+        }
+      }
     }
   }
 
@@ -271,8 +389,8 @@ var shutdown = function() {
       process.exit();
     });
     
-     // if after 
-     setTimeout(function() {
+    // if after 
+    setTimeout(function() {
          console.error("something happened, forcefully shutting down");
          process.exit();
     }, 10*1000);

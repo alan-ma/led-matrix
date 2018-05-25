@@ -53,7 +53,9 @@
 
         <!-- dynamic cell colour -->
         <div class="cell-colour"
-            v-bind:style="{ background: getBackground(cell.colour) }"></div>
+            v-bind:style="{
+                background: getBackground(cell.colour, currentTurn, cell.id)
+              }"></div>
 
         <!-- dynamic shape to represent who played it -->
         <div class="cell-content" v-if="shapes[cell.id].id > -1">
@@ -101,10 +103,42 @@
 
       <!-- currently playing a shape -->
       <div class="action play-shape" v-if="playingShape">
-        <h3>Pick a colour:</h3>
+        <h3>Roll for numbers:</h3>
 
+        <!-- roll for numbers to see where you can place tiles -->
+        <div class="roll-numbers unselectable"
+            v-bind:class="{
+                available: players[currentTurn].rolledNumbers === -1,
+                unavailable: players[currentTurn].rolledNumbers > -1 }"
+            v-on:click.stop="rollNumbers(currentTurn)">
+          <p>Roll</p>
+        </div>
+        <!-- display available numbers after a roll -->
+        <div class="available-numbers">
+          <!-- row -->
+          <p class="inline"><b>row: </b></p>
+          <p class="inline"
+              v-if="players[currentTurn]
+                  .availableNumbers[0] > -1">{{ players[currentTurn]
+                  .availableNumbers[0] }}</p>
+          <p class="inline"
+              v-if="players[currentTurn]
+                  .availableNumbers[0] === -1">roll for the row</p>
+          <br>
+          <!-- column -->
+          <p class="inline"><b>column: </b></p>
+          <p class="inline"
+              v-if="players[currentTurn]
+                  .availableNumbers[1] > -1">{{ players[currentTurn]
+                  .availableNumbers[1] }}</p>
+          <p class="inline"
+              v-if="players[currentTurn]
+                  .availableNumbers[1] === -1">roll for the row</p>
+        </div>
+        
+        <h3>Pick a colour:</h3>
         <!-- loop through all colours except for the first (null colour) -->
-        <div class="colour grid-cell"
+        <div class="colour grid-cell unselectable"
             v-if="index > 0"
             v-for="(value, index) in COLOURS"
             v-on:click.stop="selectColour(currentTurn, index)">
