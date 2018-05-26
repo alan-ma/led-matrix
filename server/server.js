@@ -14,7 +14,7 @@ app.use(express.static('public'));
 
 // LED Grid initialization
 const SIZE = 6;
-const RANDSIZE = 10;
+const RANDSIZE = 8;
 var LEDGrid = [];
 var LED_COUNT = SIZE * SIZE;
 for (var i = 0; i < LED_COUNT; i++) {
@@ -39,6 +39,7 @@ var gameInformation = {
   currentTurn: 0,
   playingShape: false,
   usingSpecial: false,
+  pointsArray: [],
   ICONS: ['fa-star', 'fa-square', 'fa-circle', 'fa-heart', 'fa-play'],
   COLOURS: [[0, 0, 0], [255, 0, 0], [0, 255, 0], [0, 0, 255], [255, 255, 0], [0, 255, 255]],
   players: [
@@ -146,6 +147,14 @@ io.on('connection', function(socket) {
     updateClient(socket);
   });
 
+  // hover tile, find potential number of points
+  socket.on('hoverTile', function(data) {
+    hoverTile(data.playerID, data.id);
+
+    // update the client information
+    updateClient(socket);
+  });
+
 });
 
 // update the client information
@@ -165,6 +174,8 @@ var placeShape = function(playerID, LEDID, LEDColour) {
       updateShape(playerID, LEDID, LEDColour);
 
       finishPlayingShape(playerID);
+      // calculatePoints(playerID, LEDID);
+      // calculateScore(playerID);
     }
   }
 };
@@ -180,6 +191,7 @@ var incrementTurn = function(playerID) {
     gameInformation.currentTurn = (gameInformation.currentTurn + 1) % gameInformation.players.length;
     gameInformation.playingShape = false;
     gameInformation.usingSpecial = false;
+    gameInformation.pointsArray = [];
   }
 };
 
@@ -234,9 +246,69 @@ var getRandomInt = function(max) {
 };
 
 // generate a floating point between min and less than max
-function getRandomArbitrary(min, max) {
+var getRandomArbitrary = function(min, max) {
   return Math.random() * (max - min) + min;
-}
+};
+
+// breadth first search to find how many shapes are connected
+var findAdjacent = function(playerID, id) {
+  var visited = []; // visited array
+  var queue = []; // priority queue
+
+  queue.push(id); // enqueue initial node
+  visited.push(id); // add initial node to visited array
+
+  while (queue.length > 0) {
+    // dequeue vertex from queue and set it to currentNode
+    var currentNode = queue.shift();
+
+    // get adjacent vertices of current node
+    // if adjacent has not been visited, mark it visited and enqueue it
+    
+    // check above
+    if (currentNode > SIZE - 1 && visited.indexOf(currentNode - SIZE) === -1) {
+      if (shapesGrid[currentNode - SIZE].id === playerID) {
+        visited.push(currentNode - SIZE);
+        queue.push(currentNode - SIZE);
+      }
+    }
+
+    // check below
+    if (currentNode < SIZE * SIZE - SIZE && visited.indexOf(currentNode + SIZE) === -1) {
+      if (shapesGrid[currentNode + SIZE].id === playerID) {
+        visited.push(currentNode + SIZE);
+        queue.push(currentNode + SIZE);
+      }
+    }
+
+    // check left
+    if (currentNode > 0 && visited.indexOf(currentNode - 1) === -1) {
+      if (shapesGrid[currentNode - 1].id === playerID) {
+        visited.push(currentNode - 1);
+        queue.push(currentNode - 1);
+      }
+    }
+
+    // check right
+    if (currentNode < SIZE * SIZE - 1 && visited.indexOf(currentNode + 1) === -1) {
+      if (shapesGrid[currentNode + 1].id === playerID) {
+        visited.push(currentNode + 1);
+        queue.push(currentNode + 1);
+      }
+    }
+  }
+
+  console.log(visited);
+
+  // set the visited nodes to the highlighted cells in the board
+  gameInformation.pointsArray = visited;
+
+};
+
+// hover tile, check adjacent cells and return visited array
+var hoverTile = function(playerID, id) {
+  findAdjacent(playerID, id);
+};
 
 
 

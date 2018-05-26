@@ -5,7 +5,7 @@ client initialization
 
 // LED Grid initialization
 const SIZE = 6;
-const RANDSIZE = 10;
+const RANDSIZE = 8;
 var LEDGridInit = [];
 var LED_COUNT = SIZE * SIZE;
 for (var i = 0; i < LED_COUNT; i++) {
@@ -149,6 +149,17 @@ var isHighlighted = function(playerID, id) {
   return false;
 };
 
+// hover over the tile, check number of points
+var hoverTile = function(playerID, id) {
+  console.log('FJDSKLFJL');
+  if (canPlayShape(playerID, id)) {
+    socket.emit('hoverTile', {
+      playerID: playerID,
+      id: id
+    });
+  }
+};
+
 
 /*
 vue js
@@ -177,7 +188,8 @@ var app = new Vue({
     grid: LEDGridInit,
     shapes: shapesGridInit,
     playingShape: false,
-    usingSpecial: false
+    usingSpecial: false,
+    pointsArray: []
   },
   methods: {
     // returns background colour in rgb form based on the colourID
@@ -232,6 +244,10 @@ var app = new Vue({
     // roll numbers
     rollNumbers: function(playerID) {
       rollNumbers(playerID);
+    },
+    // hover tile
+    hoverTile: function(playerID, id) {
+      hoverTile(playerID, id);
     }
   }
 });
