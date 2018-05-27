@@ -49,8 +49,11 @@
       <div class="grid-cell"
           v-for="cell in grid" :key="cell.id"
           v-on:click.stop="selectTile(cell.id)"
-          v-bind:class="{ hoverable: canPlayShape(currentTurn, cell.id) }"
-          v-on:mouseOver="hoverTile(currentTurn, cell.id)">
+          v-bind:class="{
+              hoverable: canPlayShape(currentTurn, cell.id),
+              pointhighlight: pointHighlight(cell.id) }"
+          v-on:mouseOver="hoverTile(currentTurn, cell.id)"
+          v-on:mouseLeave="hoverTile(currentTurn, cell.id)">
 
         <!-- dynamic cell colour -->
         <div class="cell-colour"
@@ -137,7 +140,34 @@
                   .availableNumbers[1] === -1">roll for the row</p>
         </div>
         
-        <h3>Pick a colour:</h3>
+        
+
+        <!-- displays shape being played -->
+        <h3>Shapes left:</h3>
+        <!-- shows the shapes left for the selected colour -->
+        <div class="shapes">
+          <i class="fas fa-2x"
+              v-for="n in players[currentTurn].shapesLeft"
+              v-bind:style="{ color: getBackground( players[currentTurn].selectedColour ) }"
+              v-bind:class="players[currentTurn].icon"></i>
+          <!-- no shapes left -->
+          <p v-if="players[currentTurn].shapesLeft === 0 &&
+              players[currentTurn].selectedColour != 0">
+            None left!
+          </p>
+        </div>
+
+        <!-- cancel playing shape -->
+        <div class="cancel unselectable"
+            v-on:click.stop="finishPlayingShape(currentTurn)">
+          <p>Cancel (you will not be able to play a shape)</p>
+        </div>
+      </div>
+
+      <!-- currently using a special move -->
+      <div class="action use-special" v-if="usingSpecial">
+        <h3>Pick a colour<em
+          v-if="players[currentTurn].selectedColour === 0"> (select a colour above)</em>:</h3>
         <!-- loop through all colours except for the first (null colour) -->
         <div class="colour grid-cell unselectable"
             v-if="index > 0"
@@ -152,45 +182,13 @@
             <!-- shows current selection -->
             <h2><i class="fas fa-check-circle no-stroke"
                 v-if="index === players[currentTurn].selectedColour"></i></h2>
-            <!-- shows number of shapes left for the selected colour -->
+            <!-- shows number of special moves left for the selected colour -->
             <p v-if="index != players[currentTurn].selectedColour">
               {{ players[currentTurn]
-                  .shapesLeft[ index ] }}
+                  .specialMovesLeft[ index ] }}
             </p>
           </div>
         </div>
-
-        <!-- displays shape being played -->
-        <h3>Playing shape<em
-            v-if="players[currentTurn].selectedColour === 0"> (select a colour above)</em>:</h3>
-        <!-- shows the shapes left for the selected colour -->
-        <div class="shapes">
-          <i class="fas fa-2x"
-              v-for="n in players[currentTurn].shapesLeft[ players[currentTurn].selectedColour ]"
-              v-bind:style="{ color: getBackground( players[currentTurn].selectedColour ) }"
-              v-bind:class="players[currentTurn].icon"></i>
-          <!-- no shapes left -->
-          <p v-if="players[currentTurn]
-              .shapesLeft[ players[currentTurn].selectedColour ] === 0 &&
-              players[currentTurn].selectedColour != 0">
-            None left!
-          </p>
-          <!-- no colour selected -->
-          <p v-if="players[currentTurn].selectedColour === 0">
-            Select a colour.
-          </p>
-        </div>
-
-        <!-- cancel playing shape -->
-        <div class="cancel unselectable"
-            v-on:click.stop="finishPlayingShape(currentTurn)">
-          <p>Cancel (you will not be able to play a shape)</p>
-        </div>
-      </div>
-
-      <!-- currently using a special move -->
-      <div class="action use-special">
-
       </div>
 
       <!-- end turn -->

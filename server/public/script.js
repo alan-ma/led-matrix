@@ -60,6 +60,7 @@ var parseGameInfo = function(gameInformation) {
   app.COLOURS = gameInformation.COLOURS;
   app.playingShape = gameInformation.playingShape;
   app.usingSpecial = gameInformation.usingSpecial;
+  app.pointsArray = gameInformation.pointsArray;
 };
 
 // player places a shape
@@ -115,8 +116,7 @@ var finishPlayingShape = function(playerID) {
 var canPlayShape = function(playerID, LEDID) {
   return app.players[playerID].selectedColour > 0 &&
       !app.players[playerID].playedShape &&
-      app.players[playerID].shapesLeft[
-          app.players[playerID].selectedColour] > 0 &&
+      app.players[playerID].shapesLeft > 0 &&
       app.shapes[LEDID].id === -1 &&
       isHighlighted(playerID, LEDID) &&
       app.players[playerID].rolledNumbers === 2;
@@ -151,13 +151,10 @@ var isHighlighted = function(playerID, id) {
 
 // hover over the tile, check number of points
 var hoverTile = function(playerID, id) {
-  console.log('FJDSKLFJL');
-  if (canPlayShape(playerID, id)) {
-    socket.emit('hoverTile', {
-      playerID: playerID,
-      id: id
-    });
-  }
+  socket.emit('hoverTile', {
+    playerID: playerID,
+    id: id
+  });
 };
 
 
@@ -175,7 +172,8 @@ var app = new Vue({
         id: 0,
         name: 'PlayerOne',
         playedShape: false,
-        shapesLeft: [0, 10, 10, 10, 10, 10],
+        specialMovesLeft: [0, 10, 10, 10, 10, 10],
+        shapesLeft: Math.ceil(SIZE * SIZE / 2),
         selectedColour: 0,
         usedSpecial: false,
         rolledNumbers: -1,
@@ -219,6 +217,10 @@ var app = new Vue({
       parsedColour += ')';
 
       return parsedColour;
+    },
+    // check if cell is part of the points array
+    pointHighlight: function(id) {
+      return app.pointsArray.indexOf(id) > -1;
     },
     // selects a tile on the LED grid
     selectTile: function(LEDID) {

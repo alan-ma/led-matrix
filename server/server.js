@@ -47,8 +47,9 @@ var gameInformation = {
       id: 0,
       name: 'PlayerOne',
       playedShape: false,
-      shapesLeft: [0, 1, 10, 10, 10, 10],
-      selectedColour: 0,
+      specialMovesLeft: [0, 10, 10, 10, 10, 10],
+      shapesLeft: Math.ceil(SIZE * SIZE / 2),
+      selectedColour: 1,
       usedSpecial: false,
       rolledNumbers: -1,
       availableNumbers: [-1, -1],
@@ -59,8 +60,9 @@ var gameInformation = {
       id: 1,
       name: 'PlayerTwo',
       playedShape: false,
-      shapesLeft: [0, 10, 10, 10, 10, 10],
-      selectedColour: 0,
+      specialMovesLeft: [0, 10, 10, 10, 10, 10],
+      shapesLeft: Math.ceil(SIZE * SIZE / 2),
+      selectedColour: 2,
       usedSpecial: false,
       rolledNumbers: -1,
       availableNumbers: [-1, -1],
@@ -71,8 +73,9 @@ var gameInformation = {
       id: 2,
       name: 'PlayerThree',
       playedShape: false,
-      shapesLeft: [0, 10, 10, 10, 10, 10],
-      selectedColour: 0,
+      specialMovesLeft: [0, 10, 10, 10, 10, 10],
+      shapesLeft: Math.ceil(SIZE * SIZE / 2),
+      selectedColour: 3,
       usedSpecial: false,
       rolledNumbers: -1,
       availableNumbers: [-1, -1],
@@ -169,7 +172,7 @@ var updateClient = function(socket) {
 // a player places a shape
 var placeShape = function(playerID, LEDID, LEDColour) {
   if (playerID === gameInformation.currentTurn) {
-    if (checkTile(playerID, LEDID, LEDColour)) {
+    if (checkTile(playerID, LEDID)) {
       updateLED(LEDID, LEDColour);
       updateShape(playerID, LEDID, LEDColour);
 
@@ -184,7 +187,6 @@ var placeShape = function(playerID, LEDID, LEDColour) {
 var incrementTurn = function(playerID) {
   if (playerID === gameInformation.currentTurn) {
     // reset the temporary variables for the player
-    gameInformation.players[playerID].selectedColour = 0;
     gameInformation.players[playerID].playedShape = false;
     gameInformation.players[playerID].usedSpecial = false;
     gameInformation.players[playerID].rolledNumbers = -1;
@@ -222,7 +224,9 @@ var selectColour = function(playerID, colourID) {
 
 // finish playing shape
 var finishPlayingShape = function(playerID) {
-  if (playerID === gameInformation.currentTurn) {
+  if (playerID === gameInformation.currentTurn &&
+      gameInformation.players[playerID].rolledNumbers != 0 &&
+      gameInformation.players[playerID].rolledNumbers != 1) {
     gameInformation.players[playerID].availableNumbers = [-1, -1];
     gameInformation.players[playerID].playedShape = true;
     gameInformation.playingShape = false;
@@ -282,7 +286,7 @@ var findAdjacent = function(playerID, id) {
     }
 
     // check left
-    if (currentNode > 0 && visited.indexOf(currentNode - 1) === -1) {
+    if (currentNode % SIZE > 0 && visited.indexOf(currentNode - 1) === -1) {
       if (shapesGrid[currentNode - 1].id === playerID) {
         visited.push(currentNode - 1);
         queue.push(currentNode - 1);
@@ -290,15 +294,13 @@ var findAdjacent = function(playerID, id) {
     }
 
     // check right
-    if (currentNode < SIZE * SIZE - 1 && visited.indexOf(currentNode + 1) === -1) {
+    if (currentNode % SIZE < SIZE - 1 && visited.indexOf(currentNode + 1) === -1) {
       if (shapesGrid[currentNode + 1].id === playerID) {
         visited.push(currentNode + 1);
         queue.push(currentNode + 1);
       }
     }
   }
-
-  console.log(visited);
 
   // set the visited nodes to the highlighted cells in the board
   gameInformation.pointsArray = visited;
@@ -307,17 +309,21 @@ var findAdjacent = function(playerID, id) {
 
 // hover tile, check adjacent cells and return visited array
 var hoverTile = function(playerID, id) {
-  findAdjacent(playerID, id);
+  if (checkTile(playerID, id)) {
+    findAdjacent(playerID, id);
+  } else {
+    gameInformation.pointsArray = [];
+  }
 };
 
 
 
 
 // check the tile for availability
-var checkTile = function(playerID, id, colour) {
+var checkTile = function(playerID, id) {
   return shapesGrid[id].id === -1 &&
-      colour > 0 &&
-      gameInformation.players[playerID].shapesLeft[colour] > 0 &&
+      gameInformation.players[playerID].selectedColour > 0 &&
+      gameInformation.players[playerID].shapesLeft > 0 &&
       !gameInformation.players[playerID].playedShape &&
       gameInformation.players[playerID].rolledNumbers === 2 &&
       isHighlighted(id,
@@ -329,7 +335,7 @@ var checkTile = function(playerID, id, colour) {
 var updateShape = function(playerID, LEDID, LEDColour) {
   shapesGrid[LEDID].id = playerID;
   shapesGrid[LEDID].colour = LEDColour;
-  gameInformation.players[playerID].shapesLeft[LEDColour] -= 1;
+  gameInformation.players[playerID].shapesLeft -= 1;
 };
 
 // update LED Grid
@@ -374,8 +380,8 @@ var highlightAvailableCells = function(playerID, socket) {
   const COLEXP = getRandomArbitrary(1.5, 1.8);
   
   // number of times that the grid loops through highlights
-  var numRows = 20 + gameInformation.players[playerID].availableNumbers[0];
-  var numCols = 20 + gameInformation.players[playerID].availableNumbers[1];
+  var numRows = 2 * SIZE + gameInformation.players[playerID].availableNumbers[0];
+  var numCols = 2 * SIZE + gameInformation.players[playerID].availableNumbers[1];
 
   // highlight the rows in sequence
   for (var row = 0; row <= numRows; row++) {

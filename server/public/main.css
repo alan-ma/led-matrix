@@ -91,9 +91,13 @@ i.no-stroke {
   transition: 0.1s;
 }
 
-.grid-cell.hoverable:hover {
+.grid-cell.hoverable:hover, .grid-cell.hoverable.pointhighlight {
   cursor: pointer;
   box-shadow: 0 0 12px rgba(0, 0, 0, 0.8);
+}
+
+.grid-cell.pointhighlight {
+  box-shadow: 0 0 10px 8px #FDD835;
 }
 
 .cell-colour {
@@ -185,7 +189,7 @@ i.no-stroke {
 
 .action {
   padding-top: 10px;
-  width: 75%;
+  width: 55%;
 }
 
 .action h3 {
@@ -194,7 +198,7 @@ i.no-stroke {
 }
 
 .action i {
-  margin: 0 5px;
+  margin: 5px;
 }
 
 .colour {
@@ -207,7 +211,7 @@ i.no-stroke {
 }
 
 .shapes {
-  height: 50px;
+  height: 100px;
 }
 
 .cancel {
@@ -229,7 +233,7 @@ i.no-stroke {
 }
 
 .action .cancel {
-  width: 80%;
+  width: 100%;
 }
 
 .cancel:hover {
