@@ -51,9 +51,11 @@
           v-on:click.stop="selectTile(cell.id)"
           v-bind:class="{
               hoverable: canPlayShape(currentTurn, cell.id),
-              pointhighlight: pointHighlight(cell.id) }"
+              pointhighlight: pointHighlight(cell.id),
+              specialhighlight: specialHighlightClass(cell.id) }"
+          v-bind:style="{ 'box-shadow': specialHighlight(currentTurn, cell.id) }"
           v-on:mouseOver="hoverTile(currentTurn, cell.id)"
-          v-on:mouseLeave="hoverTile(currentTurn, cell.id)">
+          v-on:mouseLeave="hoverTile(currentTurn, -1)">
 
         <!-- dynamic cell colour -->
         <div class="cell-colour"
@@ -63,7 +65,7 @@
 
         <!-- dynamic shape to represent who played it -->
         <div class="cell-content" v-if="shapes[cell.id].id > -1">
-          <i class="fas fa-2x"
+          <i class="fas fa-3x"
               v-bind:style="{ color: getBackground( shapes[cell.id].colour ) }"
               v-bind:class="ICONS[ shapes[cell.id].id ]"></i>
         </div>
@@ -139,8 +141,6 @@
               v-if="players[currentTurn]
                   .availableNumbers[1] === -1">roll for the row</p>
         </div>
-        
-        
 
         <!-- displays shape being played -->
         <h3>Shapes left:</h3>
@@ -166,13 +166,35 @@
 
       <!-- currently using a special move -->
       <div class="action use-special" v-if="usingSpecial">
-        <h3>Pick a colour<em
-          v-if="players[currentTurn].selectedColour === 0"> (select a colour above)</em>:</h3>
+
+        <h3>Pick a colour:</h3>
+
+        <!-- first cell is a random colour -->
+        <div class="colour grid-cell unselectable"
+            v-on:click.stop="selectSpecialColour(currentTurn, 0)">
+
+          <!-- changing cell colour -->
+          <div class="cell-colour" v-bind:style="{
+              background: getBackground(randomColour) }"></div>
+
+          <!-- selection highlight -->
+          <div class="cell-content">
+            <!-- shows current selection -->
+            <h2><i class="fas fa-check-circle no-stroke"
+                v-if="0 === players[currentTurn].specialMoveColour"></i></h2>
+            <!-- shows number of special moves left for the selected colour -->
+            <p class="large" v-if="0 != players[currentTurn].specialMoveColour">
+              ∞
+            </p>
+          </div>
+          
+        </div>
+
         <!-- loop through all colours except for the first (null colour) -->
         <div class="colour grid-cell unselectable"
             v-if="index > 0"
             v-for="(value, index) in COLOURS"
-            v-on:click.stop="selectColour(currentTurn, index)">
+            v-on:click.stop="selectSpecialColour(currentTurn, index)">
 
           <!-- dynamic cell colour -->
           <div class="cell-colour" v-bind:style="{ background: getBackground(index) }"></div>
@@ -181,13 +203,64 @@
           <div class="cell-content">
             <!-- shows current selection -->
             <h2><i class="fas fa-check-circle no-stroke"
-                v-if="index === players[currentTurn].selectedColour"></i></h2>
+                v-if="index === players[currentTurn].specialMoveColour"></i></h2>
             <!-- shows number of special moves left for the selected colour -->
-            <p v-if="index != players[currentTurn].selectedColour">
+            <p v-if="index != players[currentTurn].specialMoveColour">
               {{ players[currentTurn]
                   .specialMovesLeft[ index ] }}
             </p>
           </div>
+        </div>
+
+        <!-- select special move type -->
+        <h3>Select type:</h3>
+        <p><em v-if="players[currentTurn].specialMoveColour === -1">
+          Select a colour above
+        </em></p>
+
+        <!-- special move: row -->
+        <div class="special-selection"
+            v-on:click.stop="selectSpecialType(currentTurn, 'row')"
+            v-if="players[currentTurn].specialMoveColour > -1"
+            v-bind:class="{
+              available: players[currentTurn].points >= specialMoveCosts[0],
+              unavailable: specialMoveCosts[0] > players[currentTurn].points }">
+          <p>Row (cost: {{ specialMoveCosts[0] }})</p>
+          <!-- shows current selection -->
+          <h3><i class="fas fa-check-circle no-stroke"
+              v-if="0 === players[currentTurn].specialMoveType"></i></h3>
+        </div>
+
+        <!-- special move: column -->
+        <div class="special-selection"
+            v-on:click.stop="selectSpecialType(currentTurn, 'column')"
+            v-if="players[currentTurn].specialMoveColour > -1"
+            v-bind:class="{
+              available: players[currentTurn].points >= specialMoveCosts[1],
+              unavailable: specialMoveCosts[1] > players[currentTurn].points }">
+          <p>Column (cost: {{ specialMoveCosts[1] }})</p>
+          <!-- shows current selection -->
+          <h3><i class="fas fa-check-circle no-stroke"
+              v-if="1 === players[currentTurn].specialMoveType"></i></h3>
+        </div>
+
+        <!-- speical move: square (2x2) -->
+        <div class="special-selection"
+            v-on:click.stop="selectSpecialType(currentTurn, 'square')"
+            v-if="players[currentTurn].specialMoveColour > -1"
+            v-bind:class="{
+              available: players[currentTurn].points >= specialMoveCosts[2],
+              unavailable: specialMoveCosts[2] > players[currentTurn].points }">
+          <p>Square 2x2 (cost: {{ specialMoveCosts[2] }})</p>
+          <!-- shows current selection -->
+          <h3><i class="fas fa-check-circle no-stroke"
+              v-if="2 === players[currentTurn].specialMoveType"></i></h3>
+        </div>
+
+        <!-- cancel using special -->
+        <div class="cancel unselectable"
+            v-on:click.stop="finishUsingSpecial(currentTurn)">
+          <p>Cancel (you will not be able to use a special move)</p>
         </div>
       </div>
 
@@ -199,6 +272,14 @@
       </div>
     </div>
   </div>
+
+
+  <!-- game message -->
+  <transition name="fade">
+    <div class="game-message" v-if="showGameMessage">
+      {{ gameMessage }}
+    </div>
+  </transition>
   
 </div>
 

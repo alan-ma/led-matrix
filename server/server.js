@@ -33,6 +33,10 @@ for (var i = 0; i < LED_COUNT; i++) {
   });
 }
 
+// special move costs
+var RANDOMCOST = [4, 4, 5]; // row, column, square for random colours
+var SOLIDCOST = [8, 8, 9]; // solid colours
+var OWNCOST = [10, 10, 11]; // cost of selected colour
 
 // define game information
 var gameInformation = {
@@ -40,6 +44,8 @@ var gameInformation = {
   playingShape: false,
   usingSpecial: false,
   pointsArray: [],
+  specialMoveCosts: [0, 0, 0],
+  specialMoveArray: [],
   ICONS: ['fa-star', 'fa-square', 'fa-circle', 'fa-heart', 'fa-play'],
   COLOURS: [[0, 0, 0], [255, 0, 0], [0, 255, 0], [0, 0, 255], [255, 255, 0], [0, 255, 255]],
   players: [
@@ -47,9 +53,11 @@ var gameInformation = {
       id: 0,
       name: 'PlayerOne',
       playedShape: false,
-      specialMovesLeft: [0, 10, 10, 10, 10, 10],
+      specialMovesLeft: [0, 2, 2, 2, 2, 2],
       shapesLeft: Math.ceil(SIZE * SIZE / 2),
       selectedColour: 1,
+      specialMoveColour: -1,
+      specialMoveType: -1,
       usedSpecial: false,
       rolledNumbers: -1,
       availableNumbers: [-1, -1],
@@ -60,9 +68,11 @@ var gameInformation = {
       id: 1,
       name: 'PlayerTwo',
       playedShape: false,
-      specialMovesLeft: [0, 10, 10, 10, 10, 10],
+      specialMovesLeft: [0, 2, 2, 2, 2, 2],
       shapesLeft: Math.ceil(SIZE * SIZE / 2),
       selectedColour: 2,
+      specialMoveColour: -1,
+      specialMoveType: -1,
       usedSpecial: false,
       rolledNumbers: -1,
       availableNumbers: [-1, -1],
@@ -73,9 +83,11 @@ var gameInformation = {
       id: 2,
       name: 'PlayerThree',
       playedShape: false,
-      specialMovesLeft: [0, 10, 10, 10, 10, 10],
+      specialMovesLeft: [0, 2, 2, 2, 2, 2],
       shapesLeft: Math.ceil(SIZE * SIZE / 2),
       selectedColour: 3,
+      specialMoveColour: -1,
+      specialMoveType: -1,
       usedSpecial: false,
       rolledNumbers: -1,
       availableNumbers: [-1, -1],
@@ -93,7 +105,7 @@ io.on('connection', function(socket) {
   // client places shape
   socket.on('placeShape', function(data) {
     // action takes place
-    placeShape(data.playerID, data.LEDID, data.LEDColour);
+    placeShape(socket, data.playerID, data.LEDID, data.LEDColour);
 
     // update the client information
     updateClient(socket);
@@ -109,14 +121,6 @@ io.on('connection', function(socket) {
 
   // action play shape
   socket.on('actionPlayShape', function(data) {
-    actionPlayShape(data.playerID);
-
-    // update the client information
-    updateClient(socket);
-  });
-
-  // action use special
-  socket.on('actionUseSpecial', function(data) {
     actionPlayShape(data.playerID);
 
     // update the client information
@@ -158,6 +162,46 @@ io.on('connection', function(socket) {
     updateClient(socket);
   });
 
+  // action use special
+  socket.on('actionUseSpecial', function(data) {
+    actionUseSpecial(data.playerID);
+
+    // update the client information
+    updateClient(socket);
+  });
+
+  // finish using special move
+  socket.on('finishUsingSpecial', function(data) {
+    finishUsingSpecial(data.playerID);
+
+    // update the client information
+    updateClient(socket);
+  });
+
+  // select special move colour
+  socket.on('selectSpecialColour', function(data) {
+    selectSpecialColour(data.playerID, data.colourID);
+
+    // update the client information
+    updateClient(socket);
+  });
+
+  // select special move type
+  socket.on('selectSpecialType', function(data) {
+    selectSpecialType(data.playerID, data.typeID);
+
+    // update the client information
+    updateClient(socket);
+  });
+
+  // use special move
+  socket.on('useSpecial', function(data) {
+    useSpecial(data.playerID, data.id);
+
+    // update the client information
+    updateClient(socket);
+  });
+
 });
 
 // update the client information
@@ -169,16 +213,24 @@ var updateClient = function(socket) {
   });
 };
 
+// show points gained
+var showPoints = function(socket, points) {
+  socket.emit('showPoints', {
+    points: points
+  });
+};
+
 // a player places a shape
-var placeShape = function(playerID, LEDID, LEDColour) {
+var placeShape = function(socket, playerID, LEDID, LEDColour) {
   if (playerID === gameInformation.currentTurn) {
-    if (checkTile(playerID, LEDID)) {
+    if (canPlayShape(playerID, LEDID)) {
       updateLED(LEDID, LEDColour);
       updateShape(playerID, LEDID, LEDColour);
 
       finishPlayingShape(playerID);
-      // calculatePoints(playerID, LEDID);
-      // calculateScore(playerID);
+      var points = calculatePoints(playerID, LEDID);
+      showPoints(socket, points);
+      calculateScore();
     }
   }
 };
@@ -202,15 +254,6 @@ var actionPlayShape = function(playerID) {
   if (playerID === gameInformation.currentTurn &&
       !gameInformation.players[playerID].playedShape) {
     gameInformation.playingShape = true;
-  }
-};
-
-// action use shape
-var actionUseSpecial = function(playerID) {
-  if (playerID === gameInformation.currentTurn &&
-      !gameInformation.players[playerID].usedSpecial) {
-    gameInformation.players[playerID].usedSpecial = true;
-    gameInformation.usingSpecial = true;
   }
 };
 
@@ -307,20 +350,213 @@ var findAdjacent = function(playerID, id) {
 
 };
 
+// update special move array with highlighted row/column/square
+var updateSpecialMoveArray = function(playerID, id) {
+  // initialize special move array
+  gameInformation.specialMoveArray = [];
+  var ROW = Math.floor(id / SIZE);
+  var COL = id % SIZE;
+
+  // highlights depend on special move type
+  if (gameInformation.players[playerID].specialMoveType === 0) {
+    // row
+    for (var row = ROW * SIZE; row < ROW * SIZE + SIZE; row++) {
+      gameInformation.specialMoveArray.push(row);
+    }
+  } else if (gameInformation.players[playerID].specialMoveType === 1) {
+    // column
+    for (var col = COL; col < SIZE * SIZE; col += SIZE) {
+      gameInformation.specialMoveArray.push(col);
+    }
+  } else if (gameInformation.players[playerID].specialMoveType === 2) {
+    // square
+
+    // highlights to the right and below
+    // if hovered cell is on the edge, this corrects it
+    if (ROW === SIZE - 1) {
+      id -= SIZE;
+    }
+    if (COL === SIZE - 1) {
+      id--;
+    }
+
+    gameInformation.specialMoveArray.push(id); // hovered cell
+    gameInformation.specialMoveArray.push(id + 1); // to the right
+    gameInformation.specialMoveArray.push(id + SIZE); // below
+    gameInformation.specialMoveArray.push(id + SIZE + 1); // right and below
+  }
+};
+
 // hover tile, check adjacent cells and return visited array
 var hoverTile = function(playerID, id) {
-  if (checkTile(playerID, id)) {
+  // clear highlights
+  if (id < 0 || id > SIZE * SIZE - 1 || playerID != gameInformation.currentTurn) {
+    gameInformation.pointsArray = [];
+    gameInformation.specialMoveArray = [];
+    return;
+  }
+
+  // check if shape can be played
+  if (canPlayShape(playerID, id)) {
     findAdjacent(playerID, id);
   } else {
     gameInformation.pointsArray = [];
   }
+
+  // check if special move can be used
+  if (canUseSpecial(playerID)) {
+    updateSpecialMoveArray(playerID, id);
+  } else {
+    gameInformation.specialMoveArray = [];
+  }
+};
+
+// calculate points given the cell id
+var calculatePoints = function(playerID, id) {
+  if (canPlayShape(playerID, id)) {
+    findAdjacent(playerID, id);
+  }
+
+  var points = gameInformation.pointsArray.length;
+  gameInformation.players[playerID].points += points;
+
+  gameInformation.pointsArray = [];
+
+  return points;
+};
+
+// calculate score
+var calculateScore = function() {
+  for (var j = 0; j < gameInformation.players.length; j++) {
+    gameInformation.players[j].score = 0;
+  }
+
+  for (var i = 0; i < shapesGrid.length; i++) {
+    // cell colour and shape colour need to be the same
+    if (shapesGrid[i].id > -1 &&
+        shapesGrid[i].colour === LEDGrid[i].colour) {
+      gameInformation.players[shapesGrid[i].id].score += 1;
+    }
+  }
+};
+
+// action use special
+var actionUseSpecial = function(playerID) {
+  if (playerID === gameInformation.currentTurn &&
+      !gameInformation.players[playerID].usedSpecial) {
+    gameInformation.players[playerID].usedSpecial = true;
+    gameInformation.usingSpecial = true;
+  }
+};
+
+// finish using special move
+var finishUsingSpecial = function(playerID) {
+  if (playerID === gameInformation.currentTurn) {
+    gameInformation.players[playerID].usedSpecial = true;
+    gameInformation.players[playerID].specialMoveColour = -1;
+    gameInformation.players[playerID].specialMoveType = -1;
+    gameInformation.usingSpecial = false;
+    gameInformation.specialMoveCosts = [0, 0, 0];
+    gameInformation.specialMoveArray = [];
+  }
+};
+
+// select special move colour
+var selectSpecialColour = function(playerID, colourID) {
+  if (playerID === gameInformation.currentTurn &&
+      colourID >= 0 && colourID < gameInformation.COLOURS.length) {
+    gameInformation.players[playerID].specialMoveColour = colourID;
+
+    if (colourID === 0) {
+      // cost of random colour
+      gameInformation.specialMoveCosts = RANDOMCOST;
+    } else if (colourID === gameInformation.players[playerID].selectedColour) {
+      // cost of selected colour
+      gameInformation.specialMoveCosts = OWNCOST;
+    } else {
+      // cost of solid colour
+      gameInformation.specialMoveCosts = SOLIDCOST;
+    }
+  }
+};
+
+// select special move type
+var selectSpecialType = function(playerID, typeID) {
+  if (playerID === gameInformation.currentTurn &&
+      typeID > -1 && typeID < 3 &&
+      gameInformation.players[playerID].points >= gameInformation
+          .specialMoveCosts[typeID]) {
+    gameInformation.players[playerID].specialMoveType = typeID;
+  }
+};
+
+// check if player has points to use special move
+var hasSufficientPoints = function(playerID) {
+  if (gameInformation.players[playerID].specialMoveType > -1) {
+    return gameInformation.players[playerID].points >= gameInformation
+        .specialMoveCosts[gameInformation.players[playerID].specialMoveType] &&
+        gameInformation.players[playerID].specialMovesLeft[gameInformation
+            .players[playerID].specialMoveColour] > 0;
+  } else {
+    return false;
+  }
+};
+
+// check if player can use special move
+var canUseSpecial = function(playerID) {
+  return gameInformation.players[playerID].specialMoveColour > -1 &&
+      gameInformation.players[playerID].specialMoveType > -1 &&
+      gameInformation.players[playerID]
+          .specialMoveColour <= gameInformation.COLOURS.length &&
+      hasSufficientPoints(playerID);
+};
+
+// generate random integer from 1 to max
+var getRandomInt = function(max) {
+  return Math.floor(Math.random() * Math.floor(max)) + 1;
+};
+
+// use special move
+var useSpecial = function(playerID, id) {
+  if (canUseSpecial(playerID)) {
+    updateSpecialMoveArray(playerID, id);
+
+    // change led colour of affected cells
+    for (var i = 0; i < gameInformation.specialMoveArray.length; i++) {
+      // there must be a colour there already
+      if (LEDGrid[gameInformation.specialMoveArray[i]].colour > 0) {
+        if (gameInformation.players[playerID].specialMoveColour === 0) {
+          // random colour
+          LEDGrid[gameInformation.specialMoveArray[i]].colour = getRandomInt(
+              gameInformation.COLOURS.length - 1);
+        } else {
+          // solid colour
+          LEDGrid[gameInformation.specialMoveArray[i]]
+              .colour = gameInformation.players[playerID].specialMoveColour;
+        }
+      }
+    }
+
+    // use up points
+    gameInformation.players[playerID].points -= gameInformation
+        .specialMoveCosts[gameInformation.players[playerID].specialMoveType];
+
+    // use up special moves
+    for (var a = 0; a < gameInformation.players.length; a++) {
+      gameInformation.players[playerID].specialMovesLeft[gameInformation
+          .players[playerID].specialMoveType] -= 1;
+    }
+
+    finishUsingSpecial(playerID);
+
+    // calculate scores
+    calculateScore();
+  }
 };
 
 
-
-
 // check the tile for availability
-var checkTile = function(playerID, id) {
+var canPlayShape = function(playerID, id) {
   return shapesGrid[id].id === -1 &&
       gameInformation.players[playerID].selectedColour > 0 &&
       gameInformation.players[playerID].shapesLeft > 0 &&
