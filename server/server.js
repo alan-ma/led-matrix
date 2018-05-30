@@ -493,10 +493,15 @@ var selectSpecialType = function(playerID, typeID) {
 // check if player has points to use special move
 var hasSufficientPoints = function(playerID) {
   if (gameInformation.players[playerID].specialMoveType > -1) {
-    return gameInformation.players[playerID].points >= gameInformation
-        .specialMoveCosts[gameInformation.players[playerID].specialMoveType] &&
-        gameInformation.players[playerID].specialMovesLeft[gameInformation
-            .players[playerID].specialMoveColour] > 0;
+    if (gameInformation.players[playerID].specialMoveColour === 0) {
+      return gameInformation.players[playerID].points >= gameInformation
+          .specialMoveCosts[gameInformation.players[playerID].specialMoveType];
+    } else {
+      return gameInformation.players[playerID].points >= gameInformation
+          .specialMoveCosts[gameInformation.players[playerID].specialMoveType] &&
+          gameInformation.players[playerID].specialMovesLeft[gameInformation
+              .players[playerID].specialMoveColour] > 0;
+    }
   } else {
     return false;
   }
@@ -542,9 +547,11 @@ var useSpecial = function(playerID, id) {
         .specialMoveCosts[gameInformation.players[playerID].specialMoveType];
 
     // use up special moves
-    for (var a = 0; a < gameInformation.players.length; a++) {
-      gameInformation.players[playerID].specialMovesLeft[gameInformation
-          .players[playerID].specialMoveType] -= 1;
+    if (gameInformation.players[playerID].specialMoveColour > 0) {
+      for (var a = 0; a < gameInformation.players.length; a++) {
+        gameInformation.players[a].specialMovesLeft[gameInformation
+            .players[playerID].specialMoveType] -= 1;
+      }
     }
 
     finishUsingSpecial(playerID);

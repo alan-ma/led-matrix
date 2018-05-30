@@ -220,10 +220,15 @@ var selectSpecialType = function(playerID, type) {
 // check if player has points to use special move
 var hasSufficientPoints = function(playerID) {
   if (app.players[playerID].specialMoveType > -1) {
-    return app.players[playerID].points >= app
-        .specialMoveCosts[app.players[playerID].specialMoveType] &&
-        app.players[playerID].specialMovesLeft[app
-            .players[playerID].specialMoveColour] > 0;
+    if (app.players[playerID].specialMoveColour === 0) {
+      return app.players[playerID].points >= app
+          .specialMoveCosts[app.players[playerID].specialMoveType];
+    } else {
+      return app.players[playerID].points >= app
+          .specialMoveCosts[app.players[playerID].specialMoveType] &&
+          app.players[playerID].specialMovesLeft[app
+              .players[playerID].specialMoveColour] > 0;
+    }
   } else {
     return false;
   }
