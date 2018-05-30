@@ -100,7 +100,7 @@ var gameInformation = {
 // establish socket io connection
 io.on('connection', function(socket) {
   // initialize client
-  updateClient(socket);
+  updateClient();
 
   // client places shape
   socket.on('placeShape', function(data) {
@@ -108,7 +108,7 @@ io.on('connection', function(socket) {
     placeShape(socket, data.playerID, data.LEDID, data.LEDColour);
 
     // update the client information
-    updateClient(socket);
+    updateClient();
   });
 
   // increment turn
@@ -116,7 +116,7 @@ io.on('connection', function(socket) {
     incrementTurn(data.playerID);
 
     // update the client information
-    updateClient(socket);
+    updateClient();
   });
 
   // action play shape
@@ -124,7 +124,7 @@ io.on('connection', function(socket) {
     actionPlayShape(data.playerID);
 
     // update the client information
-    updateClient(socket);
+    updateClient();
   });
 
   // select colour
@@ -132,7 +132,7 @@ io.on('connection', function(socket) {
     selectColour(data.playerID, data.colourID);
 
     // update the client information
-    updateClient(socket);
+    updateClient();
   });
 
   // finish playing shape
@@ -140,7 +140,7 @@ io.on('connection', function(socket) {
     finishPlayingShape(data.playerID);
 
     // update the client information
-    updateClient(socket);
+    updateClient();
   });
 
   // roll numbers
@@ -151,7 +151,7 @@ io.on('connection', function(socket) {
     highlightAvailableCells(data.playerID, socket);
 
     // update the client information
-    updateClient(socket);
+    updateClient();
   });
 
   // hover tile, find potential number of points
@@ -159,7 +159,7 @@ io.on('connection', function(socket) {
     hoverTile(data.playerID, data.id);
 
     // update the client information
-    updateClient(socket);
+    updateClient();
   });
 
   // action use special
@@ -167,7 +167,7 @@ io.on('connection', function(socket) {
     actionUseSpecial(data.playerID);
 
     // update the client information
-    updateClient(socket);
+    updateClient();
   });
 
   // finish using special move
@@ -175,7 +175,7 @@ io.on('connection', function(socket) {
     finishUsingSpecial(data.playerID);
 
     // update the client information
-    updateClient(socket);
+    updateClient();
   });
 
   // select special move colour
@@ -183,7 +183,7 @@ io.on('connection', function(socket) {
     selectSpecialColour(data.playerID, data.colourID);
 
     // update the client information
-    updateClient(socket);
+    updateClient();
   });
 
   // select special move type
@@ -191,7 +191,7 @@ io.on('connection', function(socket) {
     selectSpecialType(data.playerID, data.typeID);
 
     // update the client information
-    updateClient(socket);
+    updateClient();
   });
 
   // use special move
@@ -199,14 +199,14 @@ io.on('connection', function(socket) {
     useSpecial(data.playerID, data.id);
 
     // update the client information
-    updateClient(socket);
+    updateClient();
   });
 
 });
 
 // update the client information
-var updateClient = function(socket) {
-  socket.emit('updateClient', {
+var updateClient = function() {
+  io.sockets.emit('updateClient', {
     grid: LEDGrid,
     info: gameInformation,
     shapes: shapesGrid
@@ -606,7 +606,7 @@ var highlightIteration = function(playerID, socket, rowOrCol, iteration, total) 
   }
 
   // update the client
-  updateClient(socket);
+  updateClient();
 };
 
 // highlight available cells and simulate rng
