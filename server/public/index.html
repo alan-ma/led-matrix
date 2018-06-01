@@ -218,43 +218,49 @@
           Select a colour above
         </em></p>
 
-        <!-- special move: row -->
-        <div class="special-selection"
-            v-on:click.stop="selectSpecialType(currentTurn, 'row')"
-            v-if="players[currentTurn].specialMoveColour > -1"
-            v-bind:class="{
-              available: players[currentTurn].points >= specialMoveCosts[0],
-              unavailable: specialMoveCosts[0] > players[currentTurn].points }">
-          <p>Row (cost: {{ specialMoveCosts[0] }})</p>
-          <!-- shows current selection -->
-          <h3><i class="fas fa-check-circle no-stroke"
-              v-if="0 === players[currentTurn].specialMoveType"></i></h3>
-        </div>
+        <!-- check if none left -->
+        <p><em v-if="players[currentTurn].specialMovesLeft[players[currentTurn]
+            .specialMoveColour] === 0 && players[currentTurn].specialMoveColour != 0">
+          None left!
+        </em></p>
 
-        <!-- special move: column -->
-        <div class="special-selection"
-            v-on:click.stop="selectSpecialType(currentTurn, 'column')"
-            v-if="players[currentTurn].specialMoveColour > -1"
-            v-bind:class="{
-              available: players[currentTurn].points >= specialMoveCosts[1],
-              unavailable: specialMoveCosts[1] > players[currentTurn].points }">
-          <p>Column (cost: {{ specialMoveCosts[1] }})</p>
-          <!-- shows current selection -->
-          <h3><i class="fas fa-check-circle no-stroke"
-              v-if="1 === players[currentTurn].specialMoveType"></i></h3>
-        </div>
+        <div v-if="players[currentTurn].specialMovesLeft[players[currentTurn]
+            .specialMoveColour] > 0 || players[currentTurn].specialMoveColour === 0">
+          <!-- special move: row -->
+          <div class="special-selection"
+              v-on:click.stop="selectSpecialType(currentTurn, 'row')"
+              v-bind:class="{
+                available: players[currentTurn].points >= specialMoveCosts[0],
+                unavailable: specialMoveCosts[0] > players[currentTurn].points }">
+            <p>Row (cost: {{ specialMoveCosts[0] }})</p>
+            <!-- shows current selection -->
+            <h3><i class="fas fa-check-circle no-stroke"
+                v-if="0 === players[currentTurn].specialMoveType"></i></h3>
+          </div>
 
-        <!-- speical move: square (2x2) -->
-        <div class="special-selection"
-            v-on:click.stop="selectSpecialType(currentTurn, 'square')"
-            v-if="players[currentTurn].specialMoveColour > -1"
-            v-bind:class="{
-              available: players[currentTurn].points >= specialMoveCosts[2],
-              unavailable: specialMoveCosts[2] > players[currentTurn].points }">
-          <p>Square 2x2 (cost: {{ specialMoveCosts[2] }})</p>
-          <!-- shows current selection -->
-          <h3><i class="fas fa-check-circle no-stroke"
-              v-if="2 === players[currentTurn].specialMoveType"></i></h3>
+          <!-- special move: column -->
+          <div class="special-selection"
+              v-on:click.stop="selectSpecialType(currentTurn, 'column')"
+              v-bind:class="{
+                available: players[currentTurn].points >= specialMoveCosts[1],
+                unavailable: specialMoveCosts[1] > players[currentTurn].points }">
+            <p>Column (cost: {{ specialMoveCosts[1] }})</p>
+            <!-- shows current selection -->
+            <h3><i class="fas fa-check-circle no-stroke"
+                v-if="1 === players[currentTurn].specialMoveType"></i></h3>
+          </div>
+
+          <!-- special move: square (2x2) -->
+          <div class="special-selection"
+              v-on:click.stop="selectSpecialType(currentTurn, 'square')"
+              v-bind:class="{
+                available: players[currentTurn].points >= specialMoveCosts[2],
+                unavailable: specialMoveCosts[2] > players[currentTurn].points }">
+            <p>Square 2x2 (cost: {{ specialMoveCosts[2] }})</p>
+            <!-- shows current selection -->
+            <h3><i class="fas fa-check-circle no-stroke"
+                v-if="2 === players[currentTurn].specialMoveType"></i></h3>
+          </div>
         </div>
 
         <!-- cancel using special -->
@@ -262,6 +268,7 @@
             v-on:click.stop="finishUsingSpecial(currentTurn)">
           <p>Cancel (you will not be able to use a special move)</p>
         </div>
+
       </div>
 
       <!-- end turn -->
