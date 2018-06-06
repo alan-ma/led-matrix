@@ -592,8 +592,12 @@ var useSpecial = function(playerID, id) {
     // use up special moves
     if (gameInformation.players[playerID].specialMoveColour > 0) {
       for (var a = 0; a < gameInformation.players.length; a++) {
-        gameInformation.players[a].specialMovesLeft[gameInformation
+        if (gameInformation.players[a].specialMovesLeft[gameInformation
+            .players[playerID].specialMoveColour] > 0) {
+          gameInformation.players[a].specialMovesLeft[gameInformation
             .players[playerID].specialMoveColour] -= 1;
+        }
+        
       }
     }
 
