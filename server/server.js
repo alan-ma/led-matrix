@@ -48,8 +48,8 @@ var gameInformation = {
   specialMoveArray: [],
   hoveredCell: -1,
   previousHover: -1,
-  ICONS: ['fa-star', 'fa-square', 'fa-circle', 'fa-heart', 'fa-play'],
-  COLOURS: [[0, 0, 0], [255, 0, 0], [0, 255, 0], [0, 0, 255], [255, 255, 0], [0, 255, 255]],
+  ICONS: ['fa-heart', 'fa-circle', 'fa-square', 'fa-star', 'fa-play'],
+  COLOURS: [[0, 0, 0], [211, 47, 47], [85, 139, 47], [26, 35, 126], [255, 255, 0], [0, 255, 255]],
   players: [
     {
       id: 0,
@@ -403,20 +403,25 @@ var hoverTile = function(playerID, id) {
     gameInformation.specialMoveArray = [];
     gameInformation.hoveredCell = -1;
   } else {
-    // check if shape can be played
-    if (canPlayShape(playerID, id)) {
-      findAdjacent(playerID, id);
-      gameInformation.hoveredCell = id;
-    } else {
-      gameInformation.pointsArray = [];
-      gameInformation.hoveredCell = -1;
+    if (gameInformation.playingShape) {
+      // check if shape can be played
+      if (canPlayShape(playerID, id) && gameInformation.playingShape) {
+        findAdjacent(playerID, id);
+        gameInformation.hoveredCell = id;
+      } else {
+        gameInformation.pointsArray = [];
+        gameInformation.hoveredCell = -1;
+      }
     }
-
-    // check if special move can be used
-    if (canUseSpecial(playerID)) {
-      updateSpecialMoveArray(playerID, id);
-    } else {
-      gameInformation.specialMoveArray = [];
+    if (gameInformation.usingSpecial) {
+      // check if special move can be used
+      if (canUseSpecial(playerID) && gameInformation.usingSpecial) {
+        updateSpecialMoveArray(playerID, id);
+        gameInformation.hoveredCell = id;
+      } else {
+        gameInformation.specialMoveArray = [];
+        gameInformation.hoveredCell = -1;
+      }
     }
   }
 
@@ -484,6 +489,8 @@ var finishUsingSpecial = function(playerID) {
     gameInformation.usingSpecial = false;
     gameInformation.specialMoveCosts = [0, 0, 0];
     gameInformation.specialMoveArray = [];
+    gameInformation.hoveredCell = -1;
+    gameInformation.previousHover = -1;
   }
 };
 
@@ -684,7 +691,7 @@ var addColour = function(colourID, id) {
   newColour += ',';
 
   if (id + 1 < LEDGrid.length) {
-    parsedInput += '\n';
+    newColour += '\n';
   }
 
   return newColour;
@@ -692,48 +699,59 @@ var addColour = function(colourID, id) {
 
 // update the physical LED grid
 var updateGrid = function() {
-  console.log(gameInformation.hoveredCell);
-  return;
   var parsedInput = '';
+  var id = -1;
 
-  for (var i = 0; i < LEDGridInput.length; i++) {
-    // special move highlight (takes highest priority)
-    if (gameInformation.specialMoveArray.indexOf(i) > -1) {
-      parsedInput += addColour();
+  for (var i = 0; i < SIZE; i++) {
+    if (i % 2 === 0) {
+      for (var j = 0; j < SIZE; j++) {
+        id = i * SIZE + j;
+        parsedInput += addColour(1, id);
+      }
+    } else {
+      for (var k = SIZE - 1; k > -1; k--) {
+        id = i * SIZE + k;
+        parsedInput += addColour(2, id);
+      }
     }
+    
+    // // special move highlight (takes highest priority)
+    // if (gameInformation.specialMoveArray.indexOf(i) > -1) {
+    //   parsedInput += addColour();
+    // }
 
 
     
-    // no highlight parameters were specified
-    if (row === undefined && col === undefined) {
-      // add the colour to the parsed input
-      parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][0];
-      parsedInput += ',';
-      parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][1];
-      parsedInput += ',';
-      parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][2];
-      if (i + 1 < LEDGridInput.length) {
-        parsedInput += '\n';
-      }
-    } else { // adding highlights for availble row/columns
-      // colour is specified
-      if (LEDGridInput[i].colour > 0) {
-        // add the colour to the parsed input
-        parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][0];
-        parsedInput += ',';
-        parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][1];
-        parsedInput += ',';
-        parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][2];
-        if (i + 1 < LEDGridInput.length) {
-          parsedInput += '\n';
-        }
-      } else { // colour is unspecified, check if it is available
-        // check if LED is in the highlighted column
-        if (isHighlighted(playerID, row, col)) {
-          parsedInput += '255,255,255\n'; // highlight as white
-        }
-      }
-    }
+    // // no highlight parameters were specified
+    // if (row === undefined && col === undefined) {
+    //   // add the colour to the parsed input
+    //   parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][0];
+    //   parsedInput += ',';
+    //   parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][1];
+    //   parsedInput += ',';
+    //   parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][2];
+    //   if (i + 1 < LEDGridInput.length) {
+    //     parsedInput += '\n';
+    //   }
+    // } else { // adding highlights for availble row/columns
+    //   // colour is specified
+    //   if (LEDGridInput[i].colour > 0) {
+    //     // add the colour to the parsed input
+    //     parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][0];
+    //     parsedInput += ',';
+    //     parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][1];
+    //     parsedInput += ',';
+    //     parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][2];
+    //     if (i + 1 < LEDGridInput.length) {
+    //       parsedInput += '\n';
+    //     }
+    //   } else { // colour is unspecified, check if it is available
+    //     // check if LED is in the highlighted column
+    //     if (isHighlighted(playerID, row, col)) {
+    //       parsedInput += '255,255,255\n'; // highlight as white
+    //     }
+    //   }
+    // }
   }
 
   var options = {
