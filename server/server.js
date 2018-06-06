@@ -131,7 +131,7 @@ io.on('connection', function(socket) {
 
   // select colour
   socket.on('selectColour', function(data) {
-    selectColour(data.playerID, data.colourID);
+    // selectColour(data.playerID, data.colourID);
 
     // update the client information
     updateClient();
@@ -644,6 +644,9 @@ var highlightIteration = function(playerID, socket, rowOrCol, iteration, total) 
   if (iteration === total) {
     // increment rolled numbers
     gameInformation.players[playerID].rolledNumbers += 1;
+
+    // update the grid
+    updateGrid();
   }
 
   // update the client
