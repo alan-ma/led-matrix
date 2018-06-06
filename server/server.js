@@ -38,6 +38,16 @@ var RANDOMCOST = [4, 4, 5]; // row, column, square for random colours
 var SOLIDCOST = [8, 8, 9]; // solid colours
 var OWNCOST = [10, 10, 11]; // cost of selected colour
 
+// initialize a python shell to execute the script via a child process
+var shell = new PythonShell('../setColours.py', {
+      args: '0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0'
+    }, function (err) {
+  if (err) {
+    console.log(err);
+  }
+  return !err;
+});
+
 // define game information
 var gameInformation = {
   currentTurn: 0,
@@ -757,17 +767,8 @@ var updateGrid = function() {
     }
   }
 
-  var options = {
-    args: parsedInput
-  };
-
   // run a python shell to execute the script via a child process
-  PythonShell.run('../setColours.py', options, function (err) {
-    if (err) {
-      console.log(err);
-    }
-    return !err;
-  });
+  shell.send(parsedInput);
 };
 
 

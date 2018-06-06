@@ -46,3 +46,20 @@ strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT)
 strip.begin()
 
 setColours(strip, SET_LED_COLOURS)
+
+# on every standard input, set colours according to input
+
+while True:
+  new_input = sys.stdin.readline().strip('\n').split('N') # each LED is N separated
+  set_led_colours = [] # initialize the list
+
+  for i in range(LED_COUNT):
+    new_item = new_input[i].split(',') # each LED specification is comma separated
+    set_led_colours.append([]) # add an empty list
+    for j in range(len(new_item)):
+      try:
+        set_led_colours[i].append(int(new_item[j])) # try adding the number
+      except ValueError:
+        set_led_colours[i].append(0) # add 0 if NaN
+  
+  setColours(strip, set_led_colours)
