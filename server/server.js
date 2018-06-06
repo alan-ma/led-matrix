@@ -46,6 +46,8 @@ var gameInformation = {
   pointsArray: [],
   specialMoveCosts: [0, 0, 0],
   specialMoveArray: [],
+  hoveredCell: -1,
+  previousHover: -1,
   ICONS: ['fa-star', 'fa-square', 'fa-circle', 'fa-heart', 'fa-play'],
   COLOURS: [[0, 0, 0], [255, 0, 0], [0, 255, 0], [0, 0, 255], [255, 255, 0], [0, 255, 255]],
   players: [
@@ -53,7 +55,7 @@ var gameInformation = {
       id: 0,
       name: 'PlayerOne',
       playedShape: false,
-      specialMovesLeft: [0, 2, 2, 2, 2, 2],
+      specialMovesLeft: [0, 4, 2, 2, 2, 2],
       shapesLeft: Math.ceil(SIZE * SIZE / 2),
       selectedColour: 1,
       specialMoveColour: -1,
@@ -68,7 +70,7 @@ var gameInformation = {
       id: 1,
       name: 'PlayerTwo',
       playedShape: false,
-      specialMovesLeft: [0, 2, 2, 2, 2, 2],
+      specialMovesLeft: [0, 2, 4, 2, 2, 2],
       shapesLeft: Math.ceil(SIZE * SIZE / 2),
       selectedColour: 2,
       specialMoveColour: -1,
@@ -78,22 +80,22 @@ var gameInformation = {
       availableNumbers: [-1, -1],
       points: 0,
       score: 0
-    },
-    {
-      id: 2,
-      name: 'PlayerThree',
-      playedShape: false,
-      specialMovesLeft: [0, 2, 2, 2, 2, 2],
-      shapesLeft: Math.ceil(SIZE * SIZE / 2),
-      selectedColour: 3,
-      specialMoveColour: -1,
-      specialMoveType: -1,
-      usedSpecial: false,
-      rolledNumbers: -1,
-      availableNumbers: [-1, -1],
-      points: 0,
-      score: 0
     }
+    // {
+    //   id: 2,
+    //   name: 'PlayerThree',
+    //   playedShape: false,
+    //   specialMovesLeft: [0, 2, 2, 4, 2, 2],
+    //   shapesLeft: Math.ceil(SIZE * SIZE / 2),
+    //   selectedColour: 3,
+    //   specialMoveColour: -1,
+    //   specialMoveType: -1,
+    //   usedSpecial: false,
+    //   rolledNumbers: -1,
+    //   availableNumbers: [-1, -1],
+    //   points: 0,
+    //   score: 0
+    // }
   ]
 };
 
@@ -228,6 +230,10 @@ var placeShape = function(socket, playerID, LEDID, LEDColour) {
       updateShape(playerID, LEDID, LEDColour);
 
       finishPlayingShape(playerID);
+
+      // update the grid
+      updateGrid();
+
       var points = calculatePoints(playerID, LEDID);
       showPoints(socket, points);
       calculateScore();
@@ -273,6 +279,8 @@ var finishPlayingShape = function(playerID) {
     gameInformation.players[playerID].availableNumbers = [-1, -1];
     gameInformation.players[playerID].playedShape = true;
     gameInformation.playingShape = false;
+    gameInformation.hoveredCell = -1;
+    gameInformation.previousHover = -1;
   }
 };
 
@@ -314,7 +322,7 @@ var findAdjacent = function(playerID, id) {
     
     // check above
     if (currentNode > SIZE - 1 && visited.indexOf(currentNode - SIZE) === -1) {
-      if (shapesGrid[currentNode - SIZE].id === playerID) {
+      if (LEDGrid[currentNode - SIZE].colour === gameInformation.players[playerID].selectedColour) {
         visited.push(currentNode - SIZE);
         queue.push(currentNode - SIZE);
       }
@@ -322,7 +330,7 @@ var findAdjacent = function(playerID, id) {
 
     // check below
     if (currentNode < SIZE * SIZE - SIZE && visited.indexOf(currentNode + SIZE) === -1) {
-      if (shapesGrid[currentNode + SIZE].id === playerID) {
+      if (LEDGrid[currentNode + SIZE].colour === gameInformation.players[playerID].selectedColour) {
         visited.push(currentNode + SIZE);
         queue.push(currentNode + SIZE);
       }
@@ -330,7 +338,7 @@ var findAdjacent = function(playerID, id) {
 
     // check left
     if (currentNode % SIZE > 0 && visited.indexOf(currentNode - 1) === -1) {
-      if (shapesGrid[currentNode - 1].id === playerID) {
+      if (LEDGrid[currentNode - 1].colour === gameInformation.players[playerID].selectedColour) {
         visited.push(currentNode - 1);
         queue.push(currentNode - 1);
       }
@@ -338,7 +346,7 @@ var findAdjacent = function(playerID, id) {
 
     // check right
     if (currentNode % SIZE < SIZE - 1 && visited.indexOf(currentNode + 1) === -1) {
-      if (shapesGrid[currentNode + 1].id === playerID) {
+      if (LEDGrid[currentNode + 1].colour === gameInformation.players[playerID].selectedColour) {
         visited.push(currentNode + 1);
         queue.push(currentNode + 1);
       }
@@ -393,31 +401,49 @@ var hoverTile = function(playerID, id) {
   if (id < 0 || id > SIZE * SIZE - 1 || playerID != gameInformation.currentTurn) {
     gameInformation.pointsArray = [];
     gameInformation.specialMoveArray = [];
-    return;
+    gameInformation.hoveredCell = -1;
+  } else {
+    // check if shape can be played
+    if (canPlayShape(playerID, id)) {
+      findAdjacent(playerID, id);
+      gameInformation.hoveredCell = id;
+    } else {
+      gameInformation.pointsArray = [];
+      gameInformation.hoveredCell = -1;
+    }
+
+    // check if special move can be used
+    if (canUseSpecial(playerID)) {
+      updateSpecialMoveArray(playerID, id);
+    } else {
+      gameInformation.specialMoveArray = [];
+    }
   }
 
-  // check if shape can be played
-  if (canPlayShape(playerID, id)) {
-    findAdjacent(playerID, id);
-  } else {
-    gameInformation.pointsArray = [];
-  }
+  // check if hover has changed
+  if (gameInformation.hoveredCell != gameInformation.previousHover) {
+    gameInformation.previousHover = gameInformation.hoveredCell;
 
-  // check if special move can be used
-  if (canUseSpecial(playerID)) {
-    updateSpecialMoveArray(playerID, id);
-  } else {
-    gameInformation.specialMoveArray = [];
+    // update the grid
+    updateGrid();
   }
 };
 
 // calculate points given the cell id
 var calculatePoints = function(playerID, id) {
-  if (canPlayShape(playerID, id)) {
-    findAdjacent(playerID, id);
+  findAdjacent(playerID, id);
+
+  var points = 0;
+
+  for (var i = 0; i < gameInformation.pointsArray.length; i++) {
+    if (LEDGrid[gameInformation.pointsArray[i]].colour === shapesGrid[
+        gameInformation.pointsArray[i]].colour) {
+      points += 2;
+    } else {
+      points++;
+    }
   }
 
-  var points = gameInformation.pointsArray.length;
   gameInformation.players[playerID].points += points;
 
   gameInformation.pointsArray = [];
@@ -556,11 +582,13 @@ var useSpecial = function(playerID, id) {
 
     finishUsingSpecial(playerID);
 
+    // update the grid
+    updateGrid();
+
     // calculate scores
     calculateScore();
   }
 };
-
 
 // check the tile for availability
 var canPlayShape = function(playerID, id) {
@@ -584,7 +612,6 @@ var updateShape = function(playerID, LEDID, LEDColour) {
 // update LED Grid
 var updateLED = function(LEDID, LEDColour) {
   LEDGrid[LEDID].colour = LEDColour;
-  updateGrid(LEDGrid);
 };
 
 // check if tile is in a row or col
@@ -614,6 +641,9 @@ var highlightIteration = function(playerID, socket, rowOrCol, iteration, total) 
 
   // update the client
   updateClient();
+
+  // update the grid
+  updateGrid();
 };
 
 // highlight available cells and simulate rng
@@ -643,11 +673,37 @@ var highlightAvailableCells = function(playerID, socket) {
   }
 };
 
+// add colour to the parsed input
+var addColour = function(colourID, id) {
+  newColour = '';
+  newColour += gameInformation.COLOURS[colourID][0];
+  newColour += ',';
+  newColour += gameInformation.COLOURS[colourID][1];
+  newColour += ',';
+  newColour += gameInformation.COLOURS[colourID][2];
+  newColour += ',';
+
+  if (id + 1 < LEDGrid.length) {
+    parsedInput += '\n';
+  }
+
+  return newColour;
+};
+
 // update the physical LED grid
-var updateGrid = function(LEDGridInput, row, col) {
+var updateGrid = function() {
+  console.log(gameInformation.hoveredCell);
+  return;
   var parsedInput = '';
 
   for (var i = 0; i < LEDGridInput.length; i++) {
+    // special move highlight (takes highest priority)
+    if (gameInformation.specialMoveArray.indexOf(i) > -1) {
+      parsedInput += addColour();
+    }
+
+
+    
     // no highlight parameters were specified
     if (row === undefined && col === undefined) {
       // add the colour to the parsed input

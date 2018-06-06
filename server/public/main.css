@@ -3,6 +3,7 @@ html, body, .container {
   height: 100%;
   width: 100%;
   margin: 0;
+  overflow: hidden;
 }
 
 h1, h2, h3 {
@@ -299,6 +300,7 @@ i.no-stroke {
   display: flex;
   align-items: center;
   justify-content: center;
+  pointer-events: none;
 }
 
 .fade-enter-active, .fade-leave-active {

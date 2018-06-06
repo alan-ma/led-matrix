@@ -170,25 +170,27 @@
         <h3>Pick a colour:</h3>
 
         <!-- first cell is a random colour -->
+        <!--
         <div class="colour grid-cell unselectable"
             v-on:click.stop="selectSpecialColour(currentTurn, 0)">
 
-          <!-- changing cell colour -->
+          changing cell colour
           <div class="cell-colour" v-bind:style="{
               background: getBackground(randomColour) }"></div>
 
-          <!-- selection highlight -->
+          selection highlight
           <div class="cell-content">
-            <!-- shows current selection -->
+            shows current selection
             <h2><i class="fas fa-check-circle no-stroke"
                 v-if="0 === players[currentTurn].specialMoveColour"></i></h2>
-            <!-- shows number of special moves left for the selected colour -->
+            shows number of special moves left for the selected colour
             <p class="large" v-if="0 != players[currentTurn].specialMoveColour">
               ∞
             </p>
           </div>
           
         </div>
+        -->
 
         <!-- loop through all colours except for the first (null colour) -->
         <div class="colour grid-cell unselectable"
