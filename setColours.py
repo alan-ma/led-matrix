@@ -13,7 +13,7 @@ LED_DMA     = 5       # DMA channel to use for generating signal (try 5)
 LED_INVERT  = False   # True to invert the signal (when using NPN transistor level shift)
 
 # Parse the input
-SYS_INPUT = str(sys.argv[1]).split('\n') # each LED is newline separated
+SYS_INPUT = str(sys.argv[1]).split('N') # each LED is N separated
 SET_LED_COLOURS = [] # initialize the list
 
 LED_COUNT = len(SYS_INPUT) # Number of LED pixels.

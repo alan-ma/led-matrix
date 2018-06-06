@@ -690,7 +690,7 @@ var addColour = function(colourID, id) {
   newColour += gameInformation.COLOURS[colourID][2];
 
   if (id + 1 < LEDGrid.length) {
-    newColour += '\n';
+    newColour += 'N';
   }
 
   return newColour;
