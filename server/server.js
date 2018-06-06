@@ -681,7 +681,7 @@ var highlightAvailableCells = function(playerID, socket) {
 };
 
 // add colour to the parsed input
-var addColour = function(colourID, id) {
+var addColour = function(colourID, id, counter) {
   newColour = '';
   newColour += gameInformation.COLOURS[colourID][0];
   newColour += ',';
@@ -689,7 +689,7 @@ var addColour = function(colourID, id) {
   newColour += ',';
   newColour += gameInformation.COLOURS[colourID][2];
 
-  if (id + 1 < LEDGrid.length) {
+  if (counter < LEDGrid.length) {
     newColour += 'N';
   }
 
@@ -700,58 +700,61 @@ var addColour = function(colourID, id) {
 var updateGrid = function() {
   var parsedInput = '';
   var id = -1;
+  var counter = 0;
 
   for (var i = 0; i < SIZE; i++) {
     if (i % 2 === 0) {
       for (var j = 0; j < SIZE; j++) {
         id = i * SIZE + j;
-        parsedInput += addColour(1, id);
+        counter++;
+        parsedInput += addColour(1, id, counter);
       }
     } else {
       for (var k = SIZE - 1; k > -1; k--) {
         id = i * SIZE + k;
-        parsedInput += addColour(2, id);
+        counter++;
+        parsedInput += addColour(2, id, counter);
       }
     }
-    
-    // // special move highlight (takes highest priority)
-    // if (gameInformation.specialMoveArray.indexOf(i) > -1) {
-    //   parsedInput += addColour();
-    // }
-
-
-    
-    // // no highlight parameters were specified
-    // if (row === undefined && col === undefined) {
-    //   // add the colour to the parsed input
-    //   parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][0];
-    //   parsedInput += ',';
-    //   parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][1];
-    //   parsedInput += ',';
-    //   parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][2];
-    //   if (i + 1 < LEDGridInput.length) {
-    //     parsedInput += '\n';
-    //   }
-    // } else { // adding highlights for availble row/columns
-    //   // colour is specified
-    //   if (LEDGridInput[i].colour > 0) {
-    //     // add the colour to the parsed input
-    //     parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][0];
-    //     parsedInput += ',';
-    //     parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][1];
-    //     parsedInput += ',';
-    //     parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][2];
-    //     if (i + 1 < LEDGridInput.length) {
-    //       parsedInput += '\n';
-    //     }
-    //   } else { // colour is unspecified, check if it is available
-    //     // check if LED is in the highlighted column
-    //     if (isHighlighted(playerID, row, col)) {
-    //       parsedInput += '255,255,255\n'; // highlight as white
-    //     }
-    //   }
-    // }
   }
+    
+  // // special move highlight (takes highest priority)
+  // if (gameInformation.specialMoveArray.indexOf(i) > -1) {
+  //   parsedInput += addColour();
+  // }
+
+
+  
+  // // no highlight parameters were specified
+  // if (row === undefined && col === undefined) {
+  //   // add the colour to the parsed input
+  //   parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][0];
+  //   parsedInput += ',';
+  //   parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][1];
+  //   parsedInput += ',';
+  //   parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][2];
+  //   if (i + 1 < LEDGridInput.length) {
+  //     parsedInput += '\n';
+  //   }
+  // } else { // adding highlights for availble row/columns
+  //   // colour is specified
+  //   if (LEDGridInput[i].colour > 0) {
+  //     // add the colour to the parsed input
+  //     parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][0];
+  //     parsedInput += ',';
+  //     parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][1];
+  //     parsedInput += ',';
+  //     parsedInput += gameInformation.COLOURS[LEDGridInput[i].colour][2];
+  //     if (i + 1 < LEDGridInput.length) {
+  //       parsedInput += '\n';
+  //     }
+  //   } else { // colour is unspecified, check if it is available
+  //     // check if LED is in the highlighted column
+  //     if (isHighlighted(playerID, row, col)) {
+  //       parsedInput += '255,255,255\n'; // highlight as white
+  //     }
+  //   }
+  // }
 
   var options = {
     args: parsedInput
