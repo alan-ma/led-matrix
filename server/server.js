@@ -39,7 +39,7 @@ var SOLIDCOST = [8, 8, 9]; // solid colours
 var OWNCOST = [10, 10, 11]; // cost of selected colour
 
 // initialize a python shell to execute the script via a child process
-var shell = new PythonShell('../test.py', {
+var shell = new PythonShell('../setColours.py', {
       args: '0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0'
     }, function (err) {
   if (err) {
@@ -107,36 +107,36 @@ var gameInformation = {
       points: 0,
       score: 0
     },
-    {
-      id: 3,
-      name: 'PlayerFour',
-      playedShape: false,
-      specialMovesLeft: [0, 2, 2, 2, 4, 2],
-      shapesLeft: Math.ceil(SIZE * SIZE / 2),
-      selectedColour: 4,
-      specialMoveColour: -1,
-      specialMoveType: -1,
-      usedSpecial: false,
-      rolledNumbers: -1,
-      availableNumbers: [-1, -1],
-      points: 0,
-      score: 0
-    },
-    {
-      id: 4,
-      name: 'PlayerFive',
-      playedShape: false,
-      specialMovesLeft: [0, 2, 2, 2, 2, 4],
-      shapesLeft: Math.ceil(SIZE * SIZE / 2),
-      selectedColour: 5,
-      specialMoveColour: -1,
-      specialMoveType: -1,
-      usedSpecial: false,
-      rolledNumbers: -1,
-      availableNumbers: [-1, -1],
-      points: 0,
-      score: 0
-    }
+    // {
+    //   id: 3,
+    //   name: 'PlayerFour',
+    //   playedShape: false,
+    //   specialMovesLeft: [0, 2, 2, 2, 4, 2],
+    //   shapesLeft: Math.ceil(SIZE * SIZE / 2),
+    //   selectedColour: 4,
+    //   specialMoveColour: -1,
+    //   specialMoveType: -1,
+    //   usedSpecial: false,
+    //   rolledNumbers: -1,
+    //   availableNumbers: [-1, -1],
+    //   points: 0,
+    //   score: 0
+    // },
+    // {
+    //   id: 4,
+    //   name: 'PlayerFive',
+    //   playedShape: false,
+    //   specialMovesLeft: [0, 2, 2, 2, 2, 4],
+    //   shapesLeft: Math.ceil(SIZE * SIZE / 2),
+    //   selectedColour: 5,
+    //   specialMoveColour: -1,
+    //   specialMoveType: -1,
+    //   usedSpecial: false,
+    //   rolledNumbers: -1,
+    //   availableNumbers: [-1, -1],
+    //   points: 0,
+    //   score: 0
+    // }
   ]
 };
 
