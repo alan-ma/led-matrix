@@ -304,7 +304,7 @@ var app = new Vue({
   },
   methods: {
     // returns background colour in rgb form based on the colourID
-    getBackground: function(colourID, playerID, id) {
+    getBackground: function(colourID, playerID, id, noColour) {
       // colour is not specified
       if (colourID === 0) {
         // check if id is specified, i.e. checking for highlight
@@ -320,16 +320,21 @@ var app = new Vue({
         return 'rgb(220, 220, 220)'; // LED is not highlighted
       }
 
-      // colour is specified, return parsed colour
-      var parsedColour = 'rgb(';
-      parsedColour += app.COLOURS[colourID][0];
-      parsedColour += ', ';
-      parsedColour += app.COLOURS[colourID][1];
-      parsedColour += ', ';
-      parsedColour += app.COLOURS[colourID][2];
-      parsedColour += ')';
+      if (noColour === undefined) {
+        // colour is specified, return parsed colour
+        var parsedColour = 'rgb(';
+        parsedColour += app.COLOURS[colourID][0];
+        parsedColour += ', ';
+        parsedColour += app.COLOURS[colourID][1];
+        parsedColour += ', ';
+        parsedColour += app.COLOURS[colourID][2];
+        parsedColour += ')';
 
-      return parsedColour;
+        return parsedColour;
+      } else {
+        return 'rgb(220, 220, 220)';
+      }
+      
     },
     // check if cell is part of the points array
     pointHighlight: function(id) {
@@ -354,7 +359,7 @@ var app = new Vue({
     },
     // selects a tile on the LED grid
     selectTile: function(id) {
-      placeShape(app.currentTurn, id);
+      // placeShape(app.currentTurn, id);
       useSpecial(app.currentTurn, id);
     },
     // play shape menu button pressed

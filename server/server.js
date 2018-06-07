@@ -39,7 +39,7 @@ var SOLIDCOST = [8, 8, 9]; // solid colours
 var OWNCOST = [10, 10, 11]; // cost of selected colour
 
 // initialize a python shell to execute the script via a child process
-var shell = new PythonShell('../setColours.py', {
+var shell = new PythonShell('../test.py', {
       args: '0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0N0,0,0'
     }, function (err) {
   if (err) {
@@ -58,8 +58,9 @@ var gameInformation = {
   specialMoveArray: [],
   hoveredCell: -1,
   previousHover: -1,
-  ICONS: ['fa-heart', 'fa-circle', 'fa-square', 'fa-star', 'fa-play'],
-  COLOURS: [[0, 0, 0], [211, 47, 47], [85, 139, 47], [26, 35, 126], [255, 255, 0], [0, 255, 255]],
+  rankings: [],
+  ICONS: ['fa-heart', 'fa-circle', 'fa-square', 'fa-3x fa-minus', 'fa-play'],
+  COLOURS: [[0, 0, 0], [211, 47, 47], [0, 145, 234], [100, 221, 23], [255, 235, 59], [170, 0, 255]],
   players: [
     {
       id: 0,
@@ -90,22 +91,52 @@ var gameInformation = {
       availableNumbers: [-1, -1],
       points: 0,
       score: 0
+    },
+    {
+      id: 2,
+      name: 'PlayerThree',
+      playedShape: false,
+      specialMovesLeft: [0, 2, 2, 4, 2, 2],
+      shapesLeft: Math.ceil(SIZE * SIZE / 2),
+      selectedColour: 3,
+      specialMoveColour: -1,
+      specialMoveType: -1,
+      usedSpecial: false,
+      rolledNumbers: -1,
+      availableNumbers: [-1, -1],
+      points: 0,
+      score: 0
+    },
+    {
+      id: 3,
+      name: 'PlayerFour',
+      playedShape: false,
+      specialMovesLeft: [0, 2, 2, 2, 4, 2],
+      shapesLeft: Math.ceil(SIZE * SIZE / 2),
+      selectedColour: 4,
+      specialMoveColour: -1,
+      specialMoveType: -1,
+      usedSpecial: false,
+      rolledNumbers: -1,
+      availableNumbers: [-1, -1],
+      points: 0,
+      score: 0
+    },
+    {
+      id: 4,
+      name: 'PlayerFive',
+      playedShape: false,
+      specialMovesLeft: [0, 2, 2, 2, 2, 4],
+      shapesLeft: Math.ceil(SIZE * SIZE / 2),
+      selectedColour: 5,
+      specialMoveColour: -1,
+      specialMoveType: -1,
+      usedSpecial: false,
+      rolledNumbers: -1,
+      availableNumbers: [-1, -1],
+      points: 0,
+      score: 0
     }
-    // {
-    //   id: 2,
-    //   name: 'PlayerThree',
-    //   playedShape: false,
-    //   specialMovesLeft: [0, 2, 2, 4, 2, 2],
-    //   shapesLeft: Math.ceil(SIZE * SIZE / 2),
-    //   selectedColour: 3,
-    //   specialMoveColour: -1,
-    //   specialMoveType: -1,
-    //   usedSpecial: false,
-    //   rolledNumbers: -1,
-    //   availableNumbers: [-1, -1],
-    //   points: 0,
-    //   score: 0
-    // }
   ]
 };
 
@@ -227,7 +258,7 @@ var updateClient = function() {
 
 // show points gained
 var showPoints = function(socket, points) {
-  socket.emit('showPoints', {
+  io.sockets.emit('showPoints', {
     points: points
   });
 };
@@ -479,6 +510,53 @@ var calculateScore = function() {
       gameInformation.players[shapesGrid[i].id].score += 1;
     }
   }
+
+  updateRankings();
+};
+
+// compare function for rankings, highest to lowest
+var compare = function(a, b) {
+  // sort by score
+  if (a.score > b.score) {
+    return -1;
+  }
+  if (a.score < b.score) {
+    return 1;
+  }
+  // sort by points
+  if (a.points > b.points) {
+    return -1;
+  }
+  if (a.points < b.points) {
+    return 1;
+  }
+  // tie
+  return 0;
+};
+
+// update rankings
+var updateRankings = function() {
+  gameInformation.rankings = [];
+
+  // copy players object (shallow copy)
+  playersCopy = gameInformation.players.slice();
+
+  // sort using compare function
+  playersCopy.sort(compare);
+
+  gameInformation.rankings.push( [ playersCopy[0].id ] ); // push first place
+
+  for (var i = 1; i < playersCopy.length; i++) {
+    if (playersCopy[i].score === playersCopy[i - 1].score &&
+        playersCopy[i].points === playersCopy[i - 1].points) {
+      // same ranking tier
+      gameInformation.rankings[ gameInformation.rankings.length - 1 ]
+          .push(playersCopy[i].id);
+    } else {
+      // next ranking tier
+      gameInformation.rankings.push([ playersCopy[i].id ]);
+    }
+  }
 };
 
 // action use special
@@ -597,7 +675,6 @@ var useSpecial = function(playerID, id) {
           gameInformation.players[a].specialMovesLeft[gameInformation
             .players[playerID].specialMoveColour] -= 1;
         }
-        
       }
     }
 
@@ -699,12 +776,18 @@ var highlightAvailableCells = function(playerID, socket) {
 
 // add colour to the parsed input
 var addColour = function(colourID, counter) {
-  newColour = '';
-  newColour += gameInformation.COLOURS[colourID][0];
-  newColour += ',';
-  newColour += gameInformation.COLOURS[colourID][1];
-  newColour += ',';
-  newColour += gameInformation.COLOURS[colourID][2];
+  var newColour = '';
+
+  if (colourID < 0) {
+    // white colour
+    newColour = '255,255,255';
+  } else {
+    newColour += gameInformation.COLOURS[colourID][0];
+    newColour += ',';
+    newColour += gameInformation.COLOURS[colourID][1];
+    newColour += ',';
+    newColour += gameInformation.COLOURS[colourID][2];
+  }
 
   if (counter < LEDGrid.length) {
     newColour += 'N';
@@ -739,7 +822,7 @@ var processBackground = function(id) {
   if (isHighlighted(id, gameInformation.players[gameInformation.currentTurn]
       .availableNumbers[0], gameInformation.players[gameInformation.currentTurn]
         .availableNumbers[1])) {
-    return 4;
+    return -1;
   }
 
   // uncoloured

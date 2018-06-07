@@ -31,7 +31,7 @@
             <i class="fas fa-crown" v-if="rankings[0].indexOf(player.id) > -1"><br></i>
           </div>
         </div>
-        
+
         <!-- current player is highlighted -->
         <h2 v-bind:class="{ current: currentTurn === player.id }">
           {{ player.name }}
@@ -50,15 +50,13 @@
   <div class="game-container">
 
     <!-- led grid -->
-    <div class="grid-container">
+    <div class="grid-container" v-if="playingShape || usingSpecial">
 
       <!-- loop over each led cell - each cell is clickable -->
       <div class="grid-cell"
           v-for="cell in grid" :key="cell.id"
           v-on:click.stop="selectTile(cell.id)"
           v-bind:class="{
-              hoverable: canPlayShape(currentTurn, cell.id),
-              pointhighlight: pointHighlight(cell.id),
               specialhighlight: specialHighlightClass(cell.id) }"
           v-bind:style="{ 'box-shadow': specialHighlight(currentTurn, cell.id) }"
           v-on:mouseOver="hoverTile(currentTurn, cell.id)"
@@ -67,18 +65,26 @@
         <!-- dynamic cell colour -->
         <div class="cell-colour"
             v-bind:style="{
-                background: getBackground(cell.colour, currentTurn, cell.id)
+                background: getBackground(cell.colour, currentTurn, cell.id, true)
               }"></div>
-
-        <!-- dynamic shape to represent who played it -->
-        <div class="cell-content" v-if="shapes[cell.id].id > -1">
-          <i class="fas fa-3x"
-              v-bind:style="{ color: getBackground( shapes[cell.id].colour ) }"
-              v-bind:class="ICONS[ shapes[cell.id].id ]"></i>
-        </div>
       </div>
     </div>
 
+    <!-- game container with leaderboard -->
+    <div class="grid-container centered" v-if="!playingShape && !usingSpecial">
+      <h2>Leaderboard</h2>
+      <p v-if="rankings.length === 0">No rankings yet!</p>
+      
+      <div v-if="rankings.length > 0"
+          v-for="(value, index) in rankings">
+        <br>
+        <h2>{{ index + 1 }}.</i></h2>
+        
+        <div v-for="playerID in rankings[index]">
+          <h3><i class="fas fa-crown" v-if="index === 0"></i> {{ players[playerID].name }}</h3>
+        </div>
+      </div>
+    </div>
 
     <!-- available actions on each turn -->
     <div class="action-container">
@@ -303,4 +309,4 @@
 <script src="/socket.io/socket.io.js"></script>
 <!-- production version of vue, optimized for size and speed -->
 <script src="vue.js"></script>
-<script src="script.js"></script>
+<script src="clientScript.js"></script>
